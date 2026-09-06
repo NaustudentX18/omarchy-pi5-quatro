@@ -365,6 +365,9 @@ pacman-key --init
 pacman-key --populate archlinuxarm
 
 # Configure pacman parallel downloads & mirrorlist
+# pacman 7's Landlock download sandbox cannot work inside a chroot — disable it
+grep -q '^DisableSandbox' /etc/pacman.conf || sed -i 's/^\[options\]/[options]\nDisableSandbox/' /etc/pacman.conf
+
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 
 # 2. System update & Kernel installation
