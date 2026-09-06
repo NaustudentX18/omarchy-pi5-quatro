@@ -87,3 +87,14 @@ starship
 gum
 wtype
 hyprpicker
+
+# ------------------------------------------------------------------------------
+# System Maintenance & Desktop Essentials (audit fixes 2026-09-07)
+# ------------------------------------------------------------------------------
+cloud-utils-growpart
+python-pip
+polkit-gnome
+fuzzel
+mako
+swaybg
+upower

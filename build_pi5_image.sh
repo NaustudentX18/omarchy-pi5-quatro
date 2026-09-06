@@ -288,7 +288,7 @@ display_auto_detect=1
 
 [pi5]
 # Raspberry Pi 5 16k Kernel & Initramfs
-kernel=Image
+kernel=kernel8_16k.img
 initramfs initramfs-linux-rpi-16k.img followkernel
 EOF
 
@@ -437,7 +437,7 @@ fi
 mkdir -p /etc/sddm.conf.d
 cat << 'SDDM_EOF' > /etc/sddm.conf.d/autologin.conf
 [Theme]
-Current=breeze
+Current=omarchy
 
 [Wayland]
 EnableHiDPI=true
@@ -504,6 +504,13 @@ elif [ -f /tmp/setup/scripts/99-pi5-tuning.conf ]; then
     mkdir -p /etc/sysctl.d
     cp /tmp/setup/scripts/99-pi5-tuning.conf /etc/sysctl.d/99-pi5-tuning.conf
 fi
+
+# 8b. I2C & smbus2 for Argon daemon (python-smbus2 is AUR-only; install via pip)
+echo "[+] Installing smbus2 for argononed..."
+pacman -S --noconfirm --needed python-pip || echo "[!] python-pip unavailable"
+pip install --break-system-packages --quiet smbus2 || echo "[!] smbus2 install failed - fan daemon will run without I2C"
+mkdir -p /etc/modules-load.d
+echo "i2c-dev" > /etc/modules-load.d/i2c-dev.conf
 
 # 9. Service Enablement
 echo "[+] Ensuring systemd services are enabled..."

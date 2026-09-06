@@ -2,5 +2,5 @@
 #
 # <file system>             <mount point>   <type>  <options>       <dump>  <pass>
 proc                        /proc           proc    defaults          0       0
-PARTUUID=@BOOT_PARTUUID@    /boot/firmware  vfat    defaults          0       2
+PARTUUID=@BOOT_PARTUUID@    /boot          vfat    defaults          0       2
 PARTUUID=@ROOT_PARTUUID@    /               ext4    defaults,noatime  0       1
