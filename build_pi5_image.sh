@@ -256,7 +256,8 @@ log_success "Rootfs extracted successfully."
 log_step "6: Inject Pi 5 Bootloader Files & Hardware Config"
 
 log_info "Injecting Raspberry Pi 5 config.txt..."
-cat << 'EOF' > "${MNT_DIR}/boot/config.txt"
+CONFIG_TXT="${WORK_DIR}/omarchy-config.txt"
+cat << 'EOF' > "${CONFIG_TXT}"
 # ==============================================================================
 # Omarchy Quatro - Raspberry Pi 5 Bootloader Configuration
 # Optimized for Broadcom BCM2712 Cortex-A76 & PCIe Gen 3 NVMe SSDs
@@ -288,9 +289,11 @@ display_auto_detect=1
 
 [pi5]
 # Raspberry Pi 5 16k Kernel & Initramfs
-kernel=kernel8_16k.img
-initramfs initramfs-linux-rpi-16k.img followkernel
+kernel=kernel8.img
+initramfs initramfs-linux.img followkernel
 EOF
+cp "${CONFIG_TXT}" "${MNT_DIR}/boot/config.txt"
+
 
 log_info "Injecting cmdline.txt with PARTUUID=${ROOT_PARTUUID}..."
 echo "root=PARTUUID=${ROOT_PARTUUID} rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory quiet splash" > "${MNT_DIR}/boot/cmdline.txt"
@@ -550,6 +553,13 @@ fi
 log_success "Chroot execution and customization completed."
 
 # ==============================================================================
+# Re-inject config.txt: linux-rpi-16k pkg ships its own /boot/config.txt that
+# overwrites ours during chroot install — ours must win (PCIe Gen3, I2C, KMS).
+if [ -f "${CONFIG_TXT}" ]; then
+    cp "${CONFIG_TXT}" "${MNT_DIR}/boot/config.txt"
+    log_info "config.txt re-injected post-chroot (package overwrite defence)."
+fi
+
 # Step 8: Image cleanup, zerofree block zeroing, unmounting, loop teardown
 # ==============================================================================
 log_step "8: Image Cleanup, Zerofree Block Zeroing, and Unmounting"
