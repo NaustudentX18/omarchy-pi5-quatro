@@ -375,6 +375,8 @@ echo "[+] Updating system packages..."
 pacman -Syu --noconfirm
 
 echo "[+] Installing Raspberry Pi 5 16k Kernel & Bootloader..."
+# linux-rpi-16k conflicts with the base generic kernel — remove it first
+pacman -R --noconfirm linux-aarch64 || true
 pacman -S --noconfirm --needed \
     linux-rpi-16k \
     linux-rpi-16k-headers \
