@@ -326,6 +326,7 @@ mount -t sysfs sys "${MNT_DIR}/sys"
 mount -t tmpfs tmpfs "${MNT_DIR}/run"
 
 # Configure DNS for network access in chroot
+rm -f "${MNT_DIR}/etc/resolv.conf"
 cp -L /etc/resolv.conf "${MNT_DIR}/etc/resolv.conf"
 
 # Copy QEMU user binary if cross-compiling
