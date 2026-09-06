@@ -1,0 +1,17 @@
+[Unit]
+Description=Argon ONE V3 / NEO 5 Fan and Power Button Daemon
+Documentation=https://github.com/Argon40
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/argononed.py
+Restart=always
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

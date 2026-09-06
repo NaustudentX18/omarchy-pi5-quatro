@@ -1,0 +1,89 @@
+# ==============================================================================
+# Omarchy Quatro Pi 5 - Arch Linux ARM Desktop Package List
+# Target Architecture: aarch64 (Raspberry Pi 5 / BCM2712)
+# ==============================================================================
+# Usage:
+#   pacman -S --needed - < <(grep -v '^#' packages.list | grep -v '^[[:space:]]*$')
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Display & Compositor
+# ------------------------------------------------------------------------------
+hyprland
+waybar
+sddm
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+wl-clipboard
+grim
+slurp
+foot
+alacritty
+
+# ------------------------------------------------------------------------------
+# GPU & Hardware Acceleration (Pi 5 VideoCore VII / Broadcom V3D)
+# ------------------------------------------------------------------------------
+mesa
+vulkan-broadcom
+libglvnd
+
+# ------------------------------------------------------------------------------
+# Audio & Media
+# ------------------------------------------------------------------------------
+pipewire
+wireplumber
+pipewire-pulse
+pipewire-alsa
+alsa-utils
+mpv
+brightnessctl
+pamixer
+
+# ------------------------------------------------------------------------------
+# Network & Bluetooth
+# ------------------------------------------------------------------------------
+networkmanager
+network-manager-applet
+bluez
+bluez-utils
+blueman
+wireless-regdb
+
+# ------------------------------------------------------------------------------
+# Shell & Core Tools
+# ------------------------------------------------------------------------------
+fastfetch
+btop
+eza
+bat
+fzf
+ripgrep
+fd
+jq
+neovim
+tmux
+zsh
+sudo
+polkit
+
+# ------------------------------------------------------------------------------
+# Fonts & Icons
+# ------------------------------------------------------------------------------
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+ttf-jetbrains-mono-nerd
+fontconfig
+
+# ------------------------------------------------------------------------------
+# Wayland / SDDM / Omarchy Desktop Companions
+# ------------------------------------------------------------------------------
+seatd
+qt6-wayland
+qt5-wayland
+xdg-utils
+xdg-user-dirs
+starship
+gum
+wtype
+hyprpicker
