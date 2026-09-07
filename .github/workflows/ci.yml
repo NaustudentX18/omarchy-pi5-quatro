@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Shell & config lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shellcheck build scripts
+        run: |
+          shellcheck --severity=warning build_pi5_image.sh build_docker.sh \
+            desktop/*.sh argon/*.sh resize/*.sh system_tuning/*.sh || true
+
+      - name: Bash syntax check (strict)
+        run: |
+          for f in build_pi5_image.sh build_docker.sh desktop/*.sh argon/*.sh resize/*.sh system_tuning/*.sh; do
+            bash -n "$f"
+          done
+
+      - name: Validate Imager OS list JSON
+        run: python3 -m json.tool pi-imager-os-list.json > /dev/null
+
+      - name: Validate package manifest
+        run: |
+          # every non-comment line must be a plausible pacman package name
+          bad=$(grep -vE '^\s*(#|$)' desktop/packages.list | grep -vE '^[a-zA-Z0-9_-]+$' || true)
+          if [ -n "$bad" ]; then echo "Invalid package entries:"; echo "$bad"; exit 1; fi
+          count=$(grep -cvE '^\s*(#|$)' desktop/packages.list)
+          echo "packages.list OK ($count packages)"

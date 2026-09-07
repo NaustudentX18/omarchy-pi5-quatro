@@ -1,250 +1,369 @@
-# Omarchy Quatro — Arch Linux ARM for Raspberry Pi 5
+<div align="center">
 
-[![Target](https://img.shields.io/badge/Target-Raspberry%20Pi%205%20(BCM2712)-red.svg)](#architecture-overview)
-[![Kernel](https://img.shields.io/badge/Kernel-linux--rpi--16k-blue.svg)](#16k-page-size-kernel)
-[![Desktop](https://img.shields.io/badge/Desktop-Hyprland%20Wayland-brightgreen.svg)](#wayland--hyprland-desktop-stack)
-[![PCIe](https://img.shields.io/badge/Storage-PCIe%20Gen%203%20NVMe-orange.svg)](#pcie-gen-3-nvme-throughput)
-[![Cooling](https://img.shields.io/badge/Thermal-Argon%20ONE%20%2F%20NEO%205-purple.svg)](#argon-one--neo-5-thermal-management)
+<img src="assets/banner.png" alt="Omarchy Quatro — Omarchy-style Arch Linux desktop for Raspberry Pi 5" width="100%">
 
-**Omarchy Quatro** is a high-performance Arch Linux ARM workstation distribution engineered specifically for the **Raspberry Pi 5** (8GB RAM) operating directly off high-speed **NVMe SSDs** (M.2 HATs, Argon ONE V3 M.2, Argon NEO 5 M.2).
+# Omarchy Quatro
 
-It combines pristine Arch Linux ARM aarch64 rolling stability with the fluid **Hyprland Wayland compositor**, full hardware acceleration, custom active cooling daemons, 16k page-size kernel optimization, and first-boot partition auto-expansion.
+**A complete, flash-and-go [Omarchy](https://github.com/omacom/omarchy)-style desktop for the Raspberry Pi 5.**
 
----
+Hyprland on Wayland · NVMe-first · GPU-accelerated · fan-cooled · Chromium + SSH baked in
 
-## Table of Contents
+[![Release](https://img.shields.io/badge/release-v1.0.0-7aa2f7)](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases)
+[![Target](https://img.shields.io/badge/target-Raspberry%20Pi%205%20·%20aarch64-red)](#-requirements)
+[![Desktop](https://img.shields.io/badge/desktop-Hyprland%20·%20Wayland-bb9af7)](#-whats-inside)
+[![License](https://img.shields.io/badge/license-MIT-9ece6a)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff9e64)](CONTRIBUTING.md)
 
-- [Architecture Overview](#architecture-overview)
-  - [16k Page-Size Kernel](#16k-page-size-kernel)
-  - [PCIe Gen 3 NVMe Throughput](#pcie-gen-3-nvme-throughput)
-  - [Argon ONE / NEO 5 Thermal Management](#argon-one--neo-5-thermal-management)
-  - [8GB RAM & ZRAM Memory Tuning](#8gb-ram--zram-memory-tuning)
-  - [Wayland / Hyprland Desktop Stack](#wayland--hyprland-desktop-stack)
-  - [First-Boot NVMe Auto-Resize](#first-boot-nvme-auto-resize)
-- [Quickstart: Flashing to 512GB NVMe SSD](#quickstart-flashing-to-512gb-nvme-ssd)
-  - [Prerequisites & Pi 5 EEPROM Boot Order](#prerequisites--pi-5-eeprom-boot-order)
-  - [Method 1: Raspberry Pi Imager (Custom OS List)](#method-1-raspberry-pi-imager-custom-os-list)
-  - [Method 2: High-Speed Direct Flashing with bmaptool](#method-2-high-speed-direct-flashing-with-bmaptool)
-  - [Method 3: Raw dd / Decompression Stream](#method-3-raw-dd--decompression-stream)
-- [Building the Image from Source](#building-the-image-from-source)
-  - [Method A: Docker Privileged Container (Recommended)](#method-a-docker-privileged-container-recommended)
-  - [Method B: Native Host Execution](#method-b-native-host-execution)
-  - [Build Options & Flags](#build-options--flags)
-- [Repository Structure](#repository-structure)
-- [Default System Credentials & Configuration](#default-system-credentials--configuration)
+**Love [Omarchy](https://github.com/omacom/omarchy) but only have a Pi 5 lying around?** This repo builds you a
+bootable Arch Linux ARM image with the same philosophy — a beautiful, batteries-included Hyprland desktop —
+tuned specifically for the BCM2712: 16K-page kernel, PCIe Gen 3 NVMe, and the Argon case fan daemon.
+
+> ⚠️ **Unofficial community project.** Not affiliated with Omarchy, DHH, or Basecamp.
+> Official Omarchy is x86_64-only — this is an independent ARM port.
+
+</div>
 
 ---
 
-## Architecture Overview
+## 📖 Contents
 
-### 16k Page-Size Kernel
-Standard Linux distributions for 64-bit ARM use 4KB memory page sizes. The Broadcom BCM2712 Cortex-A76 processor on the Raspberry Pi 5 achieves significantly higher memory bandwidth and reduced TLB (Translation Lookaside Buffer) thrashing with **16KB page sizes**.
-Omarchy Quatro packages `linux-rpi-16k` and `raspberrypi-bootloader`, delivering up to **20-30% faster memory-intensive operations** and enhanced I/O performance.
-
-### PCIe Gen 3 NVMe Throughput
-The Pi 5 features an external PCIe 2.0 x1 connector that reliably supports **PCIe Gen 3.0** speeds on high-grade M.2 HATs and enclosures (such as the Argon ONE V3 NVMe Case, Pimoroni NVMe Base, Pineberry Pi HatDrive, and Waveshare M.2 HAT).
-In `/boot/config.txt`:
-```ini
-dtparam=pciex1
-dtparam=pciex1_gen=3
-```
-This increases data bus bandwidth from ~450 MB/s (Gen 2) to **~850–900 MB/s sequential read/write** on modern M.2 drives (e.g., Crucial P3/P310, WD Black SN770, Samsung 980).
-
-### Argon ONE / NEO 5 Thermal Management
-For aluminum enclosures like the **Argon ONE V2/V3** and **Argon NEO 5**, the image includes an automated I2C thermal control daemon:
-- Target: `/dev/i2c-1` at bus address `0x1a`
-- Service: `argononed.service` running `/usr/local/bin/argononed.py`
-- Step curve:
-  - `< 55°C`: 0% (Silent passive cooling)
-  - `55°C – 65°C`: 30% Fan Speed
-  - `65°C – 75°C`: 60% Fan Speed
-  - `>= 75°C`: 100% Fan Speed
-
-### 8GB RAM & ZRAM Memory Tuning
-To eliminate swapping stalls while keeping latency at near-zero, Omarchy Quatro provides:
-- **ZRAM Compressed Swap**: Powered by `systemd-zram-generator` allocating half of physical RAM as an in-memory swap pool compressed with `zstd`.
-- **Custom VM sysctl tuning** (`/etc/sysctl.d/99-pi5-tuning.conf`):
-  - `vm.swappiness = 180`: Actively uses compressed ZRAM before discarding file-backed caches.
-  - `vm.watermark_boost_factor = 0`: Prevents preemptive kswapd reclaim stutter.
-  - `vm.watermark_scale_factor = 125`: Maintains buffer headroom for sudden large memory allocations.
-  - `vm.page-cluster = 0`: Zero sequential read clustering penalty for RAM swaps.
-
-### Wayland / Hyprland Desktop Stack
-- **Compositor**: Hyprland (dynamic tiling Wayland compositor with smooth animations and blur).
-- **Display Manager**: SDDM configured with automatic Wayland session login into `hyprland.desktop`.
-- **Status Bar & UI**: Waybar, Fuzzel application launcher, Foot / Kitty terminal emulators, Mako notifications, and Swaybg wallpaper engine.
-- **Audio Stack**: PipeWire with `pipewire-pulse`, `wireplumber`, and ALSA integration.
-
-### First-Boot NVMe Auto-Resize
-The pre-built raw image is created at a compact 12GB sparse size. On initial boot, the one-shot `rpi-resizerootfs.service` executes:
-1. Inspects the active root partition device (e.g. `/dev/nvme0n1p2`).
-2. Expands the partition boundary to 100% of the drive geometry using `parted`.
-3. Runs an online `resize2fs` to instantly claim the full NVMe capacity (e.g. 512GB, 1TB).
-4. Unregisters and disables itself permanently.
+- [Why](#-why)
+- [Requirements](#-requirements)
+- [Install — four steps](#-install--four-steps)
+  - [Step 1 — Get the image](#step-1--get-the-image)
+  - [Step 2 — Flash it](#step-2--flash-it)
+  - [Step 3 — First boot](#step-3--first-boot)
+  - [Step 4 — Post-install](#step-4--post-install)
+- [What's inside](#-whats-inside)
+- [Hardware tuning](#-hardware-tuning)
+- [Building from source](#-building-from-source)
+- [Troubleshooting](#-troubleshooting)
+- [FAQ](#-faq)
+- [Repository layout](#-repository-layout)
+- [Credits](#-credits)
 
 ---
 
-## Quickstart: Flashing to 512GB NVMe SSD
+## 🤔 Why
 
-### Prerequisites & Pi 5 EEPROM Boot Order
-Before booting directly from NVMe with no SD card inserted, confirm your Pi 5 bootloader EEPROM is configured to prioritize NVMe:
+Official [Omarchy](https://github.com/omacom/omarchy) ships x86_64 ISOs only. Meanwhile millions of Pi 5s are
+out there with perfectly good Cortex-A76 cores, a GPU, and an NVMe slot. **Omarchy Quatro** closes that gap:
+
+| | Stock Raspberry Pi OS | Omarchy Quatro |
+|---|---|---|
+| Desktop | PIXEL (LXQt-based) | **Hyprland** tiling Wayland, Omarchy-style |
+| Kernel | 4K pages, generic | **16K pages** (`linux-rpi-16k`) — less TLB pressure on A76 |
+| Storage | SD-card-first | **NVMe-first**, PCIe **Gen 3** (~850–900 MB/s) |
+| Cooling | Manual scripts | **Argon ONE/NEO 5 I²C fan daemon**, silent under 55 °C |
+| Packages | apt (Debian) | **pacman** (Arch Linux ARM) — rolling, fresh |
+| Extras | — | Chromium, SSH-on-boot, auto-resize, ZRAM, full dev toolset |
+
+It is **not** a shim or a proot container — it's a real, bootable OS image built by
+[`build_pi5_image.sh`](build_pi5_image.sh) from a stock [Arch Linux ARM](https://archlinuxarm.org) rootfs.
+
+---
+
+## 📦 Requirements
+
+| Thing | Detail |
+|---|---|
+| **Raspberry Pi 5** | 4 GB works, 8 GB recommended (ZRAM makes 4 GB fine for daily use) |
+| **NVMe SSD** | ≥ 32 GB. The image is 12 GB compressed; first boot expands to fill the drive |
+| **USB-NVMe enclosure** | For flashing from your PC — *or* flash from the Pi itself, no PC needed |
+| **M.2 HAT / case** | Argon ONE V2/V3, Argon NEO 5, Pimoroni NVMe Base, Pineberry HatDrive, Waveshare… |
+| **Power supply** | Official 27 W (USB-C) recommended for NVMe + peripherals |
+| **Software** | [Raspberry Pi Imager](https://www.raspberrypi.com/software/) — that's it |
+
+<details>
+<summary><b>Can I use an SD card instead?</b></summary>
+
+Yes — flash the same image to an SD card. Everything works; you just give up NVMe speeds.
+The first-boot resize grows the rootfs to fill the SD card too. PCIe/Argon features are config-level
+and simply won't do anything without the hardware.
+
+</details>
+
+---
+
+## 🚀 Install — four steps
+
+<img src="assets/install-flow.png" alt="Four step install flow" width="100%">
+
+### Step 1 — Get the image
+
+**Option A · Download the prebuilt release** (easiest)
+
+GitHub caps release files at 2 GiB, so the image ships as two parts you join locally:
 
 ```bash
-# Check current boot order
-rpi-eeprom-config
-
-# Ensure BOOT_ORDER includes NVMe (6) before or after SD (1):
-# 0xf61 = Try NVMe first, then SD card fallback
-# 0xf16 = Try SD card first, then NVMe
+# download omarchy-pi5-quatro.img.zst.00 and .01 from the releases page, then:
+cat omarchy-pi5-quatro.img.zst.00 omarchy-pi5-quatro.img.zst.01 > omarchy-pi5-quatro.img.zst
+sha256sum -c SHA256SUMS          # must print OK
 ```
 
-If needed, update the EEPROM config:
+➡️ **[Go to Releases](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases)**
+
+**Option B · Build it yourself on your own Pi 5** (~16 min, always fresh)
+
+If you already have *any* bootable Linux on the Pi (even a spare SD card with Raspberry Pi OS):
+
 ```bash
-sudo rpi-eeprom-config --edit
-# Set: BOOT_ORDER=0xf61
-# Set: PCIE_PROBE=1
+sudo apt install -y git parted dosfstools e2fsprogs curl zstd xz-utils   # Debian-based host
+git clone https://github.com/NaustudentX18/omarchy-pi5-quatro.git
+cd omarchy-pi5-quatro
+sudo ./build_pi5_image.sh --fast-compress
+# → output/omarchy-pi5-quatro.img.zst + SHA256SUMS
+```
+
+That's genuinely the whole build — the script downloads the ALARM rootfs, chroots in, installs the
+kernel + desktop, and compresses the result. No Docker, no cross-compile, no x86 machine.
+
+### Step 2 — Flash it
+
+1. Open **Raspberry Pi Imager**
+2. **CHOOSE OS → Use custom** → pick `omarchy-pi5-quatro.img.zst`
+   (Imager decompresses zstd on the fly — **do not extract it first**)
+3. **CHOOSE STORAGE** → your NVMe drive (via USB enclosure)
+4. **Write**
+
+> ⚠️ **Skip the "OS customisation" screen** (hostname/WiFi/SSH — press *No*).
+> That machinery only works on official Raspberry Pi OS; this image already ships its own
+> user, autologin, and SSH config, and Imager's overrides are silently ignored.
+
+<details>
+<summary><b>CLI alternatives</b></summary>
+
+```bash
+# stream-decompress straight to the drive (no temp file):
+zstdcat omarchy-pi5-quatro.img.zst | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+
+# or with xz:
+xzcat omarchy-pi5-quatro.img.xz | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+Replace `/dev/sdX` with your actual device (`lsblk` to check — **double-check, dd does not ask**).
+SHA-256 sums for every artifact are in [`SHA256SUMS`](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases).
+
+</details>
+
+### Step 3 — First boot
+
+<img src="assets/first-boot.png" alt="First boot walkthrough" width="100%">
+
+- Move the NVMe into your M.2 HAT / Argon case, power on. The Pi 5 EEPROM boots NVMe before SD by default.
+- First boot takes ~2 minutes: a one-shot service **grows the root partition to fill the entire drive**, then disables itself.
+- You land **autologged into Hyprland** as user `omarchy` (password `omarchy`).
+- **WiFi:** click the network applet in the waybar, or run `nmtui`. Ethernet just works.
+- **SSH is already running:** `ssh omarchy@omarchy-pi5.local` from your PC.
+
+### Step 4 — Post-install
+
+```bash
+passwd                              # change the default password. seriously :)
+sudo pacman -Syu                    # bring the rolling release current
+systemctl status argononed          # fan daemon (silent < 55°C is normal!)
+fastfetch                           # enjoy
 ```
 
 ---
 
-### Method 1: Raspberry Pi Imager (Custom OS List)
+## 🖥️ What's inside
 
-Raspberry Pi Imager can load the provided `pi-imager-os-list.json` definition directly:
+<img src="assets/stack.png" alt="Omarchy Quatro software stack" width="100%">
 
-1. Launch Raspberry Pi Imager with the custom repository argument:
-   ```bash
-   rpi-imager --repo file:///home/pi/projects/omarchy-pi5-quatro/pi-imager-os-list.json
-   ```
-2. Under **Operating System**, select:
-   - **Omarchy Quatro - Arch Linux ARM (Pi 5 NVMe)**
-3. Under **Storage**, choose your 512GB NVMe drive (attached via USB-NVMe enclosure or adapter).
-4. Click **Next** / **Write**.
-5. Once written and verified, insert the NVMe drive into your Pi 5 M.2 HAT and boot!
+**Desktop:** Hyprland, SDDM (autologin), waybar, fuzzel, mako, swaybg, foot + alacritty,
+grim/slurp, wl-clipboard, xdg portals, polkit agent
+**Apps:** Chromium, Neovim, tmux, fastfetch, btop, eza, bat, fzf, ripgrep, fd, jq, starship
+**System:** PipeWire audio, NetworkManager + applet, BlueZ Bluetooth, openssh,
+16K-page Pi 5 kernel + mesa/Vulkan for the VideoCore VII GPU, ZRAM, cloud-utils-growpart
 
-Alternatively, select **Use custom** in Raspberry Pi Imager and select the uncompressed `.img` or compressed `.img.xz` file directly.
+Full manifest: [`desktop/packages.list`](desktop/packages.list)
 
 ---
 
-### Method 2: High-Speed Direct Flashing with bmaptool
+## ⚙️ Hardware tuning
 
-`bmaptool` is the fastest method to flash sparse raw disk images, skipping empty blocks automatically:
+**PCIe Gen 3 NVMe** — `/boot/config.txt` enables `pciex1` at Gen 3, lifting the Pi 5's
+PCIe 2.0 lane to ~850–900 MB/s sequential on quality drives.
 
-```bash
-# Decompress image if working with .zst
-zstd -d -k output/omarchy-pi5-quatro.img.zst
+**Argon fan curve** — `argononed.service` drives the case fan over I²C (`/dev/i2c-1`, addr `0x1a`):
 
-# Generate block map
-bmaptool create -o output/omarchy-pi5-quatro.img.bmap output/omarchy-pi5-quatro.img
+| CPU temp | Fan |
+|---|---|
+| < 55 °C | 0 % — silent |
+| 55–65 °C | 30 % |
+| 65–75 °C | 60 % |
+| ≥ 75 °C | 100 % |
 
-# Flash to target NVMe SSD (replace /dev/sdX or /dev/nvmeXn1 with your drive)
-sudo bmaptool copy output/omarchy-pi5-quatro.img /dev/nvme0n1
-```
+**Memory** — ZRAM swap (zstd-compressed, half of RAM) plus tuned sysctls
+(`vm.swappiness=180`, `page-cluster=0`, watermark tuning) for RAM-first swapping without stalls.
 
----
-
-### Method 3: Raw dd / Decompression Stream
-
-To stream a compressed image directly to the target NVMe drive without decompressing to host storage first:
-
-#### From `.img.zst` (Zstandard):
-```bash
-zstdcat output/omarchy-pi5-quatro.img.zst | sudo dd of=/dev/nvme0n1 bs=4M status=progress conv=fsync
-```
-
-#### From `.img.xz` (XZ):
-```bash
-xzcat output/omarchy-pi5-quatro.img.xz | sudo dd of=/dev/nvme0n1 bs=4M status=progress conv=fsync
-```
+**Boot media** — `config.txt` / `cmdline.txt` use deterministic `PARTUUID`s
+(disk signature `0x1974beef`), so boot doesn't shift when drives reorder.
 
 ---
 
-## Building the Image from Source
+## 🔨 Building from source
 
-### Method A: Docker Privileged Container (Recommended)
-
-Building inside the container avoids host dependency drift, requires no local package installations, and runs in an isolated rootfs environment.
+Native build on the Pi 5 is the proven path (used for every released image):
 
 ```bash
-cd /home/pi/projects/omarchy-pi5-quatro
+sudo ./build_pi5_image.sh --fast-compress   # ~16 min on a Pi 5
+```
 
-# Make runners executable
-chmod +x build_docker.sh build_pi5_image.sh scripts/*.sh scripts/*.py
+| Flag | Effect |
+|---|---|
+| `--fast-compress` | zstd -3 / xz -1 — quick iteration builds |
+| *(default)* | Higher compression for slimmer release artifacts |
+| `--skip-compress` | Leave a raw `.img` only |
 
-# Start containerized build
+<details>
+<summary><b>Docker (advanced / x86 cross-build)</b></summary>
+
+```bash
 ./build_docker.sh
 ```
 
-### Method B: Native Host Execution
+Cross-building from an x86 host works but needs `binfmt_misc` qemu-aarch64 registration on the
+**host**, and is markedly slower than a native Pi 5 build. The Pi is the reference environment.
 
-Run directly on the Pi 5 host (Debian/Arch) with root privileges:
+</details>
+
+The build is fully scripted and reproducible: ALARM rootfs download → partition/loop-mount →
+chroot (keyring init, Landlock-safe pacman config, kernel swap to `linux-rpi-16k`, package
+manifest install, Omarchy config + user + services) → post-chroot `config.txt` re-injection
+(the kernel package clobbers it) → zerofree/zero-fill → compress → SHA256SUMS.
+
+---
+
+## 🔧 Troubleshooting
+
+<details>
+<summary><b>Won't boot from NVMe</b></summary>
+
+Check the EEPROM boot order on any bootable medium:
 
 ```bash
-cd /home/pi/projects/omarchy-pi5-quatro
-
-# Ensure required tools are installed:
-# Debian: sudo apt install parted dosfstools e2fsprogs tar curl zstd xz-utils zerofree
-# Arch:   sudo pacman -S parted dosfstools e2fsprogs tar curl zstd xz zerofree
-
-# Run build orchestrator
-sudo ./build_pi5_image.sh
+rpi-eeprom-config          # BOOT_ORDER should include 6 (NVMe), e.g. 0xf61
+sudo rpi-eeprom-config --edit   # set BOOT_ORDER=0xf61
 ```
 
-### Build Options & Flags
+Also try a different USB3 cable/enclosure port, and confirm the drive appears in `lsblk`.
+</details>
 
-The build orchestrator supports the following options:
+<details>
+<summary><b>No video output</b></summary>
 
-| Flag | Description |
-|---|---|
-| `--skip-compress` | Skips `.img.zst` and `.img.xz` multi-threaded compression (ideal for local testing). |
-| `--fast-compress` | Uses fast compression levels (`zstd -3`, `xz -1`) for rapid packaging iteration. |
-| `--help` | Displays usage summary and available flags. |
+Give first boot 2–3 minutes (it's resizing the filesystem). Then check that your monitor
+cable is in the ** HDMI 0 port** (closest to the power jack) — that's the firmware default.
+</details>
 
-Example:
+<details>
+<summary><b>Fan never spins</b></summary>
+
+Silent below 55 °C is by design. Verify the daemon and I²C:
+
 ```bash
-# Rapid test build skipping high-ratio compression
-sudo ./build_pi5_image.sh --fast-compress
+systemctl status argononed
+sudo i2cdetect -y 1        # Argon controller shows up at 0x1a
+journalctl -u argononed -b
+```
+</details>
+
+<details>
+<summary><b>Rootfs didn't grow to full size</b></summary>
+
+```bash
+lsblk                       # root partition should ≈ disk size
+systemctl status rpi-resizerootfs
+sudo systemctl start rpi-resizerootfs   # re-run manually
+```
+</details>
+
+<details>
+<summary><b>SSH refused</b></summary>
+
+sshd is enabled at boot. If `.local` doesn't resolve, use the IP from the waybar network
+applet tooltip or your router: `ssh omarchy@<ip>`. Password is `omarchy` until you change it.
+</details>
+
+---
+
+## ❓ FAQ
+
+<details>
+<summary><b>Is this official Omarchy?</b></summary>
+
+No. It's an independent community port inspired by [Omarchy](https://github.com/omacom/omarchy)'s
+desktop, built on Arch Linux ARM. Official Omarchy targets x86_64 only.
+</details>
+
+<details>
+<summary><b>Do I need Raspberry Pi OS first?</b></summary>
+
+No — the image <b>is</b> the complete OS. Flash it directly and boot.
+</details>
+
+<details>
+<summary><b>Do I need to unzip the image?</b></summary>
+
+No. Raspberry Pi Imager decompresses <code>.zst</code>/<code>.xz</code> while writing. Flash the file as-is.
+</details>
+
+<details>
+<summary><b>Why a 16K-page kernel?</b></summary>
+
+ARM64 kernels can run 4K or 16K pages. On Cortex-A76 (Pi 5), 16K pages reduce TLB pressure and
+page-table walk overhead for memory-heavy workloads. It's the same kernel Raspberry Pi OS ships
+for the Pi 5 — paired here with the full Arch ARM userland.
+</details>
+
+<details>
+<summary><b>Default credentials?</b></summary>
+
+User <code>omarchy</code>, password <code>omarchy</code>, sudo NOPASSWD — set for a smooth first run.
+Change the password immediately (built for a hobbyist single-user board, not shared machines).
+</details>
+
+<details>
+<summary><b>Where are the screenshots?</b></summary>
+
+Diagrams here are generated from the repo's actual configuration. Real Hyprland screenshots vary
+by setup — community submissions are very welcome via PR!
+</details>
+
+---
+
+## 📁 Repository layout
+
+```
+omarchy-pi5-quatro/
+├── build_pi5_image.sh      # master image builder — steps 1–9, loop-device based
+├── build_docker.sh         # optional privileged-container build runner
+├── Dockerfile              # build container image
+├── pi-imager-os-list.json  # Raspberry Pi Imager custom OS list entry
+├── argon/                  # Argon ONE/NEO 5 fan daemon + systemd unit
+├── resize/                 # first-boot rootfs auto-expander + unit
+├── system_tuning/          # ZRAM config + Pi 5 sysctl profile
+├── config/                 # /etc/fstab injected into the image
+├── desktop/                # packages.list manifest + Omarchy setup scripts
+└── assets/                 # README artwork (generated from repo config)
 ```
 
 ---
 
-## Repository Structure
+## 🙏 Credits
 
-```
-/home/pi/projects/omarchy-pi5-quatro/
-├── build_pi5_image.sh          # Master image orchestrator (Steps 1–9)
-├── build_docker.sh             # Privileged Docker container runner
-├── Dockerfile                  # Containerized build environment
-├── pi-imager-os-list.json      # Raspberry Pi Imager OS list entry
-├── README.md                   # Complete documentation and user guide
-├── boot/
-│   ├── config.txt              # Pi 5 PCIe Gen 3, I2C, 16k kernel config
-│   └── cmdline.txt             # Kernel command line with deterministic PARTUUID
-├── desktop/
-│   └── packages.list           # Curated Arch Linux ARM package manifest
-└── scripts/
-    ├── argononed.py            # Argon ONE / NEO 5 I2C fan daemon
-    ├── argononed.service       # Systemd unit for cooling daemon
-    ├── rpi-resizerootfs.sh     # First-boot online NVMe rootfs auto-expander
-    ├── rpi-resizerootfs.service# Systemd one-shot service for expansion
-    ├── zram-generator.conf     # ZRAM compressed RAM swap config
-    └── 99-pi5-tuning.conf      # Kernel and VM sysctl performance parameters
-```
+- [Omarchy](https://github.com/omacom/omarchy) by DHH & community — the desktop philosophy and configs this port draws from
+- [Arch Linux ARM](https://archlinuxarm.org) — the userland foundation
+- [Argon40](https://argon40.com) — case hardware + fan protocol
+- Raspberry Pi Foundation — EEPROM/boot tooling and docs
 
----
+## 📜 License
 
-## Default System Credentials & Configuration
+[MIT](LICENSE) — build it, flash it, fork it, sell it on a shelf if you want.
 
-| Parameter | Default Value | Notes |
-|---|---|---|
-| **Default User** | `omarchy` | Created with standard user groups (`wheel,video,audio,...`) |
-| **User Password** | `omarchy` | Please change on first login (`passwd omarchy`) |
-| **Root Password** | `omarchy` | Please change on first login (`passwd root`) |
-| **Sudo Privileges** | `NOPASSWD: ALL` | Configured in `/etc/sudoers.d/010_wheel_nopasswd` |
-| **Default Hostname** | `omarchy-pi5` | Configured in `/etc/hostname` |
-| **Display Session** | `hyprland.desktop` | Automatically loaded by SDDM on boot |
-| **Network Manager** | Active | Connect via `nmtui`, `nmcli`, or the Waybar network applet |
-| **Audio Server** | PipeWire | Native WirePlumber session management |
-
----
-
-*Omarchy Quatro is an open-source system initiative designed for power users running Raspberry Pi 5 hardware.*
+<div align="center">
+<br><br>
+<b>If this saved you a weekend, a ⭐ helps other Pi 5 owners find it.</b>
+</div>
