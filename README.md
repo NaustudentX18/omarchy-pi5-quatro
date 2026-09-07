@@ -287,6 +287,22 @@ sshd is enabled at boot. If `.local` doesn't resolve, use the IP from the waybar
 applet tooltip or your router: `ssh omarchy@<ip>`. Password is `omarchy` until you change it.
 </details>
 
+<details>
+<summary><b>Flashed v1.0.0 and got a black screen?</b></summary>
+
+v1.0.0 had an MBR signature byte-order bug: the kernel resolved partitions as
+<code>efbe7419-01/02</code> while <code>cmdline.txt</code> rooted to <code>1974beef-02</code>, so the boot stalled
+waiting for a root device that never appeared. <b>Re-flash with v1.0.1+</b> — or fix in place
+without re-downloading by rewriting 4 bytes at MBR offset 440 on any Linux box:
+
+```bash
+printf '\xef\xbe\x74\x19' | sudo dd of=/dev/sdX bs=1 seek=440 count=4 conv=notrunc
+```
+
+(Point <code>/dev/sdX</code> at the whole drive, verify with <code>blkid</code>: PARTUUIDs should read
+<code>1974beef-01/02</code>.)
+</details>
+
 ---
 
 ## ❓ FAQ
