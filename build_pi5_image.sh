@@ -525,6 +525,7 @@ echo "i2c-dev" > /etc/modules-load.d/i2c-dev.conf
 echo "[+] Ensuring systemd services are enabled..."
 systemctl enable sddm.service || true
 systemctl enable NetworkManager.service || true
+systemctl enable sshd.service || true
 systemctl enable bluetooth.service || true
 systemctl enable argononed.service || true
 systemctl enable rpi-resizerootfs.service || true
