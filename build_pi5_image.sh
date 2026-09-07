@@ -203,9 +203,12 @@ parted -s "${IMAGE_FILE}" mkpart primary fat32 4MiB 516MiB
 parted -s "${IMAGE_FILE}" set 1 boot on
 parted -s "${IMAGE_FILE}" mkpart primary ext4 516MiB 100%
 
-# Write deterministic 32-bit MBR Disk Identifier (0x1974beef at byte offset 440)
-# This guarantees exact PARTUUIDs: 1974beef-01 and 1974beef-02
-printf '\x19\x74\xbe\xef' | dd of="${IMAGE_FILE}" bs=1 seek=440 count=4 conv=notrunc status=none
+# Write deterministic 32-bit MBR Disk Identifier — value 0x1974beef at byte offset 440.
+# MBR signatures are stored LITTLE-ENDIAN on disk: to make the u32 value read back as
+# 0x1974beef (matching cmdline.txt / fstab PARTUUIDs 1974beef-01/02), the bytes must be
+# written reversed: ef be 74 19. (v1.0.0 wrote 19 74 be ef -> kernel saw efbe7419-xx,
+# root=PARTUUID=1974beef-02 never resolved, first boot hung at initramfs: black screen.)
+printf '\xef\xbe\x74\x19' | dd of="${IMAGE_FILE}" bs=1 seek=440 count=4 conv=notrunc status=none
 log_success "Disk partitioned with PARTUUID: boot=${BOOT_PARTUUID}, root=${ROOT_PARTUUID}"
 
 # ==============================================================================
