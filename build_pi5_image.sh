@@ -502,13 +502,16 @@ fi
 FAILED_PKGS=""
 for p in $BASE_PKGS $OMARCHY_REPO_PKGS; do
     case "$p" in
-        usage|dotnet-runtime|qemu-user-static-binfmt)
+        usage|dotnet-runtime|dotnet-runtime-9.0|qemu-user-static-binfmt)
             echo "[=] skip (no aarch64 package): $p"
             FAILED_PKGS="$FAILED_PKGS $p"
             continue;;
     esac
-    pacman -S --needed --noconfirm "$p" 2>&1 | tail -2
-    if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+    # pipefail-safe: `|| rc=$?` keeps set -e happy; PIPESTATUS survives the
+    # assignment, so rc reflects pacman itself, not tail.
+    rc=0
+    pacman -S --needed --noconfirm "$p" 2>&1 | tail -2 || rc=$?
+    if [ "$rc" -eq 0 ]; then
         # keep the image rootfs from filling with the package cache
         rm -f /var/cache/pacman/pkg/*.pkg.tar.zst /var/cache/pacman/pkg/*.pkg.tar.xz
     else
