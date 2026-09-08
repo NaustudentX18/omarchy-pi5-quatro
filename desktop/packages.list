@@ -57,6 +57,10 @@ bluez-utils
 blueman
 wireless-regdb
 openssh
+# mDNS: avahi announces omarchy-pi5.local on the LAN; nss-mdns lets the Pi
+# resolve other machines' .local hostnames
+avahi
+nss-mdns
 
 # ------------------------------------------------------------------------------
 # Shell & Core Tools
@@ -109,3 +113,5 @@ fuzzel
 mako
 swaybg
 upower
+# ZRAM swap: 4GB zstd-compressed swap configured via /etc/systemd/zram-generator.conf
+zram-generator

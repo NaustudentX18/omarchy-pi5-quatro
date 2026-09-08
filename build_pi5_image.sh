@@ -568,6 +568,12 @@ elif [ -f /tmp/setup/scripts/zram-generator.conf ]; then
     mkdir -p /etc/systemd
     cp /tmp/setup/scripts/zram-generator.conf /etc/systemd/zram-generator.conf
 fi
+# zram-generator (packages.list) must be present: its boot generator creates
+# /dev/zram0 from the conf above. Fail loudly rather than ship a swapless image.
+if ! pacman -Q zram-generator &>/dev/null; then
+    echo "[!] FATAL: zram-generator package missing — zram swap will not exist"
+    exit 1
+fi
 
 if [ -f /tmp/setup/system_tuning/99-pi5-sysctl.conf ]; then
     mkdir -p /etc/sysctl.d
@@ -592,7 +598,17 @@ systemctl enable sshd.service || true
 systemctl enable bluetooth.service || true
 systemctl enable argononed.service || true
 systemctl enable rpi-resizerootfs.service || true
-systemctl enable systemd-zram-setup@zram0.service || true
+# avahi: announces omarchy-pi5.local on the LAN; nss-mdns (packages.list) +
+# the nsswitch tweak below let the Pi resolve other .local hostnames.
+systemctl enable avahi-daemon.service || true
+# NOTE: systemd-zram-setup@zram0 is intentionally NOT enabled — its template
+# unit ships with no [Install] section, so `systemctl enable` always fails.
+# The zram-generator's boot generator self-activates the swap from the conf.
+
+# Wire nss-mdns into nsswitch.conf (idempotent; insert before first resolve/dns)
+if grep -q '^hosts:' /etc/nsswitch.conf && ! grep -q '^hosts:.*mdns' /etc/nsswitch.conf; then
+    sed -i -E '/^hosts:/ s/(resolve|dns)/mdns4_minimal [NOTFOUND=return] \1/' /etc/nsswitch.conf
+fi
 
 # Set permissions for omarchy user home
 chown -R omarchy:omarchy /home/omarchy
@@ -668,6 +684,10 @@ CRITICAL_FILES=(
     "${MNT_DIR}/boot/fixup4.dat"
     "${MNT_DIR}/boot/initramfs-linux.img"
     "${MNT_DIR}/boot/config.txt"
+    "${MNT_DIR}/usr/lib/systemd/system-generators/zram-generator"
+    "${MNT_DIR}/etc/systemd/zram-generator.conf"
+    "${MNT_DIR}/usr/bin/avahi-daemon"
+    "${MNT_DIR}/etc/avahi/avahi-daemon.conf"
 )
 for f in "${CRITICAL_FILES[@]}"; do
     if [ ! -e "$f" ]; then
@@ -696,6 +716,22 @@ fi
 # 3. Autologin must force the Wayland display server (else SDDM runs X, absent here)
 grep -q "DisplayServer=wayland" "${MNT_DIR}/etc/sddm.conf.d/autologin.conf" 2>/dev/null || {
     log_error "autologin.conf missing 'DisplayServer=wayland'"
+    VERIFY_FAILURE=1
+}
+
+# 4. zram swap machinery: conf must carry a [zram0] device stanza
+grep -q '^\[zram0\]' "${MNT_DIR}/etc/systemd/zram-generator.conf" 2>/dev/null || {
+    log_error "zram-generator.conf missing [zram0] section"
+    VERIFY_FAILURE=1
+}
+# avahi must be enabled for mDNS (omarchy-pi5.local) — test with -L, not -e:
+# the wants-symlink target only resolves inside the image.
+if [ ! -L "${MNT_DIR}/etc/systemd/system/multi-user.target.wants/avahi-daemon.service" ]; then
+    log_error "avahi-daemon.service not enabled (missing multi-user.target.wants symlink)"
+    VERIFY_FAILURE=1
+fi
+grep -q 'mdns4_minimal' "${MNT_DIR}/etc/nsswitch.conf" 2>/dev/null || {
+    log_error "nsswitch.conf missing mdns4_minimal (nss-mdns not wired)"
     VERIFY_FAILURE=1
 }
 

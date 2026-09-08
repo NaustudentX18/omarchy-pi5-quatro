@@ -2,6 +2,34 @@
 
 All notable changes to Omarchy Quatro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
+## [1.0.4] — 2026-09-08
+
+### Added
+
+- **avahi + nss-mdns**: the image now announces itself as `omarchy-pi5.local`
+  on the LAN (no more router-IP hunting) and resolves other `.local` hosts
+  (`mdns4_minimal` wired into `nsswitch.conf`). `avahi-daemon` is enabled and
+  the build gate asserts the wants-symlink and nsswitch line are present.
+
+### Fixed
+
+- **zram swap actually exists now**: `zram-generator` was never in
+  `packages.list`, so `systemd-zram-setup@zram0.service` (enabled since
+  v1.0.0 with `|| true`) referenced a unit that could never exist — no swap
+  on any shipped image. The package is now installed; the bogus enable line
+  is gone (the unit template has no `[Install]` section — the generator
+  self-activates 4 GB zstd swap from `/etc/systemd/zram-generator.conf` at
+  boot), replaced by a loud in-chroot presence check and two verifier
+  asserts. NOTE: existing v1.0.x installs gain zram via
+  `pacman -S zram-generator` (config already present).
+- Hyprland flip **still blocked**: ALARM rebuilt hyprland (0.56.1-3) and
+  aquamarine (0.15.0-2) on 2026-09-08 but they remain desynced — hyprland
+  needs `libaquamarine.so=13`, repo aquamarine provides soname 14. Sway
+  stays the default session. `hyprland-guiutils` and `hyprtoolkit` did
+  appear in the repos; flip is now only blocked on the soname.
+
+[1.0.4]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.3...v1.0.4
+
 ## [1.0.3] — 2026-09-08
 
 ### Fixed (audit pass)
