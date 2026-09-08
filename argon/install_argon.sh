@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# install_argon.sh - Install Argon ONE V3 / NEO 5 Daemon & Service
+# install_argon.sh - Distro-aware installation script for Argon ONE V3 / NEO 5
+#                    daemon. Supports apt, pacman, dnf, and pip-fallback.
 # Omarchy Quatro Pi 5 Agent Swarm
 # ==============================================================================
 set -euo pipefail
@@ -39,25 +40,86 @@ else
     echo "      [WARN] No boot config.txt found (custom image build environment)."
 fi
 
-# Step 2: Install / verify Python dependencies if apt is available
+# Step 2: Install / verify Python dependencies (distro-aware)
+# Detect package manager so the script works on Debian/Ubuntu (apt), Arch /
+# ALARM (pacman), Fedora/RHEL (dnf), and any distro lacking native packages
+# via a pip last-resort fallback.
 echo "[2/5] Verifying Python prerequisites..."
-if command -v apt-get >/dev/null 2>&1; then
-    MISSING_PKGS=()
-    if ! python3 -c "import smbus2, smbus" >/dev/null 2>&1; then
-        MISSING_PKGS+=(python3-smbus2)
-    fi
-    if ! python3 -c "import gpiod" >/dev/null 2>&1; then
-        MISSING_PKGS+=(python3-libgpiod)
-    fi
 
-    if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
-        echo "      Installing required packages: ${MISSING_PKGS[*]}..."
-        apt-get update -qq && apt-get install -y -qq "${MISSING_PKGS[@]}" || {
-            echo "      [WARN] apt-get install returned non-zero. Continuing if packages exist."
-        }
-    else
-        echo "      All required Python libraries (smbus2/smbus, libgpiod) are present."
+if command -v apt-get >/dev/null 2>&1; then
+    PM="apt"
+elif command -v pacman >/dev/null 2>&1; then
+    PM="pacman"
+elif command -v dnf >/dev/null 2>&1; then
+    PM="dnf"
+else
+    PM="pip"
+fi
+echo "      Detected package manager: ${PM}"
+
+# Translate a logical Python package name into the distro-native one.
+resolve_pkg() {
+    # $1 = logical name (smbus2 | libgpiod)
+    case "$PM:$1" in
+        apt:smbus2)    echo "python3-smbus2" ;;
+        apt:libgpiod)  echo "python3-libgpiod" ;;
+        pacman:smbus2) echo "python-smbus2" ;;
+        pacman:libgpiod) echo "python-libgpiod" ;;
+        dnf:smbus2)    echo "python3-smbus2" ;;
+        dnf:libgpiod)  echo "python3-libgpiod" ;;
+        pip:smbus2)    echo "smbus2" ;;
+        pip:libgpiod)  echo "" ;;  # pip cannot ship libgpiod's C library
+    esac
+}
+
+install_pkgs() {
+    case "$PM" in
+        apt)
+            apt-get update -qq && apt-get install -y -qq "$@"
+            ;;
+        pacman)
+            pacman -S --noconfirm --needed "$@"
+            ;;
+        dnf)
+            dnf install -y "$@"
+            ;;
+        pip)
+            # Last-resort fallback for distros without native packages.
+            # --break-system-packages is required on PEP 668 systems
+            # (Debian 12+, Ubuntu 23.04+, Arch/ALARM with externally-managed
+            # python). On ALARM specifically the python-smbus2 package is
+            # usually preferred; the pip fallback exists for sandboxes.
+            pip install --break-system-packages "$@"
+            ;;
+    esac
+}
+
+MISSING_PKGS=()
+
+# smbus2 (I2C master library)
+if ! python3 -c "import smbus2" >/dev/null 2>&1; then
+    PKG="$(resolve_pkg smbus2)"
+    [ -n "$PKG" ] && MISSING_PKGS+=("$PKG")
+fi
+
+# gpiod (libgpiod Python bindings, required for power-button monitoring)
+if ! python3 -c "import gpiod" >/dev/null 2>&1; then
+    PKG="$(resolve_pkg libgpiod)"
+    if [ -n "$PKG" ]; then
+        MISSING_PKGS+=("$PKG")
+    elif [ "$PM" = "pip" ]; then
+        echo "      [WARN] gpiod Python bindings require libgpiod C library;"
+        echo "             install python3-libgpiod / python-libgpiod manually."
     fi
+fi
+
+if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+    echo "      Installing required packages via ${PM}: ${MISSING_PKGS[*]}..."
+    install_pkgs "${MISSING_PKGS[@]}" || {
+        echo "      [WARN] ${PM} install returned non-zero. Continuing if packages exist."
+    }
+else
+    echo "      All required Python libraries (smbus2, gpiod) are present."
 fi
 
 # Step 3: Install daemon executable
@@ -92,4 +154,5 @@ echo "=================================================================="
 echo " Argon ONE V3 / NEO 5 Daemon successfully installed!"
 echo " Thermal curve: <50C:0% | 50-59C:25% | 60-69C:55% | >=70C:100%"
 echo " Power button: Double-tap -> Reboot | 3s hold -> Shutdown"
+echo " Package manager: ${PM}"
 echo "=================================================================="

@@ -6,11 +6,11 @@
 
 **A complete, flash-and-go [Omarchy](https://github.com/omacom/omarchy)-style desktop for the Raspberry Pi 5.**
 
-Hyprland on Wayland · NVMe-first · GPU-accelerated · fan-cooled · Chromium + SSH baked in
+sway on Wayland (Hyprland-ready) · NVMe-first · GPU-accelerated · fan-cooled · Chromium + SSH baked in
 
 [![Release](https://img.shields.io/badge/release-v1.0.2-7aa2f7)](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases)
 [![Target](https://img.shields.io/badge/target-Raspberry%20Pi%205%20·%20aarch64-red)](#-requirements)
-[![Desktop](https://img.shields.io/badge/desktop-Hyprland%20·%20Wayland-bb9af7)](#-whats-inside)
+[![Desktop](https://img.shields.io/badge/desktop-sway%20·%20Wayland%20%28Hyprland-ready%29-bb9af7)](#-whats-inside)
 
 [![License](https://img.shields.io/badge/license-MIT-9ece6a)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff9e64)](CONTRIBUTING.md)
@@ -21,7 +21,8 @@ Hyprland on Wayland · NVMe-first · GPU-accelerated · fan-cooled · Chromium +
 > `pacman -Syu hyprland aquamarine` once it resolves).
 
 **Love [Omarchy](https://github.com/omacom/omarchy) but only have a Pi 5 lying around?** This repo builds you a
-bootable Arch Linux ARM image with the same philosophy — a beautiful, batteries-included Hyprland desktop —
+bootable Arch Linux ARM image with the same philosophy — a beautiful, batteries-included sway desktop
+(Hyprland-ready — re-enable with `sudo pacman -S hyprland aquamarine` once ALARM catches up) —
 tuned specifically for the BCM2712: 16K-page kernel, PCIe Gen 3 NVMe, and the Argon case fan daemon.
 
 > ⚠️ **Unofficial community project.** Not affiliated with Omarchy, DHH, or Basecamp.
@@ -57,7 +58,7 @@ out there with perfectly good Cortex-A76 cores, a GPU, and an NVMe slot. **Omarc
 
 | | Stock Raspberry Pi OS | Omarchy Quatro |
 |---|---|---|
-| Desktop | PIXEL (LXQt-based) | **Hyprland** tiling Wayland, Omarchy-style |
+| Desktop | PIXEL (LXQt-based) | **sway** tiling Wayland, Omarchy-style (Hyprland-ready) |
 | Kernel | 4K pages, generic | **16K pages** (`linux-rpi-16k`) — less TLB pressure on A76 |
 | Storage | SD-card-first | **NVMe-first**, PCIe **Gen 3** (~850–900 MB/s) |
 | Cooling | Manual scripts | **Argon ONE/NEO 5 I²C fan daemon**, silent under 55 °C |
@@ -158,7 +159,7 @@ SHA-256 sums for every artifact are in [`SHA256SUMS`](https://github.com/Naustud
 
 - Move the NVMe into your M.2 HAT / Argon case, power on. The Pi 5 EEPROM boots NVMe before SD by default.
 - First boot takes ~2 minutes: a one-shot service **grows the root partition to fill the entire drive**, then disables itself.
-- You land **autologged into Hyprland** as user `omarchy` (password `omarchy`).
+- You land **autologged into sway** as user `omarchy` (password `omarchy`).
 - **WiFi:** click the network applet in the waybar, or run `nmtui`. Ethernet just works.
 - **SSH is already running:** `ssh omarchy@omarchy-pi5.local` from your PC.
 
@@ -177,7 +178,7 @@ fastfetch                           # enjoy
 
 <img src="assets/stack.png" alt="Omarchy Quatro software stack" width="100%">
 
-**Desktop:** Hyprland, SDDM (autologin), waybar, fuzzel, mako, swaybg, foot + alacritty,
+**Desktop:** sway, SDDM (autologin), waybar, fuzzel, mako, swaybg, foot + alacritty,
 grim/slurp, wl-clipboard, xdg portals, polkit agent
 **Apps:** Chromium, Neovim, tmux, fastfetch, btop, eza, bat, fzf, ripgrep, fd, jq, starship
 **System:** PipeWire audio, NetworkManager + applet, BlueZ Bluetooth, openssh,
@@ -222,6 +223,35 @@ sudo ./build_pi5_image.sh --fast-compress   # ~16 min on a Pi 5
 | `--fast-compress` | zstd -3 / xz -1 — quick iteration builds |
 | *(default)* | Higher compression for slimmer release artifacts |
 | `--skip-compress` | Leave a raw `.img` only |
+
+### Pin the Omarchy checkout
+
+The image pulls `omacom/omarchy` `master` branch by default (depth-1 clone, latest commit).
+To pin a specific fork/branch/commit for reproducibility, set environment variables before invoking the build:
+
+```bash
+OMARCHY_REPO_URL=https://github.com/yourfork/omarchy.git \
+OMARCHY_BRANCH=your-branch \
+OMARCHY_PIN_SHA=deadbeefcafebabe12345... \
+sudo ./build_pi5_image.sh
+```
+
+Setting `OMARCHY_PIN_SHA` is strongly recommended for reproducible builds — without it, the latest
+commit on `OMARCHY_BRANCH` is used every time.
+
+### Regenerate the Pi Imager manifest hashes
+
+The image's SHA-256 hashes and sizes are baked into [`pi-imager-os-list.json`](pi-imager-os-list.json)
+so Raspberry Pi Imager can verify downloads. The build script does NOT auto-update this manifest.
+After rebuilding, regenerate the hashes:
+
+```bash
+sha256sum output/omarchy-pi5-quatro.img.zst output/omarchy-pi5-quatro.img
+ls -l output/omarchy-pi5-quatro.img.zst output/omarchy-pi5-quatro.img
+```
+
+Paste the values into `pi-imager-os-list.json` (`sha256`, `image_download_size`, `extract_sha256`,
+`extract_size`) and bump `release_date`. Then commit, tag, and push the release.
 
 <details>
 <summary><b>Docker (advanced / x86 cross-build)</b></summary>
@@ -353,6 +383,26 @@ Change the password immediately (built for a hobbyist single-user board, not sha
 Diagrams here are generated from the repo's actual configuration. Real Hyprland screenshots vary
 by setup — community submissions are very welcome via PR!
 </details>
+
+---
+
+## 🔒 Security
+
+This image is built for hobbyist single-user use. Defaults:
+
+- **User**: `omarchy`, **password**: `omarchy`, sudo **NOPASSWD**
+- **SSH password authentication enabled by default**
+- **No firewall configured**
+
+Before connecting this Pi 5 to any untrusted network, harden it:
+
+1. Change the password: `passwd omarchy`
+2. Disable SSH password auth — edit `/etc/ssh/sshd_config`, set `PasswordAuthentication no` and
+   `PermitRootLogin no`, then `sudo systemctl restart sshd`.
+3. Install and enable a firewall: `sudo pacman -S ufw && sudo ufw enable`.
+4. Consider generating an Ed25519 keypair and using `ssh-copy-id` before disabling password auth.
+
+This image is **not** suitable for direct exposure to the public internet without first hardening it.
 
 ---
 

@@ -9,13 +9,21 @@ jobs:
   lint:
     name: Shell & config lint
     runs-on: ubuntu-latest
+    # NOTE: End-to-end image build verification is NOT in CI.
+    # The build runs as root with privileged loop devices, which GitHub-hosted runners can't provide.
+    # Manual build verification on a real Pi 5 is required before each release.
     steps:
       - uses: actions/checkout@v4
 
       - name: Shellcheck build scripts
         run: |
-          shellcheck --severity=warning build_pi5_image.sh build_docker.sh \
-            desktop/*.sh argon/*.sh resize/*.sh system_tuning/*.sh || true
+          shellcheck --severity=style --enable=add-default-case,deprecate-which,quote-safe-variables build_pi5_image.sh build_docker.sh desktop/*.sh argon/*.sh resize/*.sh system_tuning/*.sh
+
+      - name: Hadolint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
 
       - name: Bash syntax check (strict)
         run: |

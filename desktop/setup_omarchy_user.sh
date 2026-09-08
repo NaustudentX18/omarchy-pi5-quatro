@@ -15,7 +15,21 @@ set -euo pipefail
 TARGET_ROOT="${1:-/}"
 USERNAME="omarchy"
 PASSWORD="omarchy"
-GROUPS="wheel,video,audio,input,storage,seat"
+# Pi 5 desktop canonical group list — applied by setup_omarchy_user.sh when called
+# explicitly. The build_pi5_image.sh inline useradd uses a smaller subset; this is
+# the authoritative list and should be used everywhere.
+#   wheel   - sudo
+#   video   - /dev/video*, /dev/dri/card0
+#   audio   - /dev/snd/*
+#   input   - /dev/input/*
+#   storage - udisks2 disk mounting
+#   seat    - logind seat assignment (required for sway without seatd)
+#   network - NetworkManager polkit actions
+#   power   - UPower / suspend / hibernate
+#   i2c     - /dev/i2c-* (Argon MCU, sensors)
+#   render  - /dev/dri/renderD* (sway / wayland)
+#   lp      - printing (future-proofing)
+GROUPS="wheel,video,audio,input,storage,seat,network,power,i2c,render,lp"
 DEFAULT_SHELL="/bin/zsh"
 FALLBACK_SHELL="/bin/bash"
 

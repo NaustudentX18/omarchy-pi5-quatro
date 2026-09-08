@@ -10,9 +10,9 @@ Features:
     - 50°C - 59°C: 25%
     - 60°C - 69°C: 55%
     - >= 70°C:    100%
-- Monitors Argon power button pulse signals on BCM GPIO 4:
-    - Pulse 20-30 ms (double tap):  Graceful Reboot
-    - Pulse 40-50 ms (3s hold):     Graceful Shutdown / Poweroff
+- Monitors Argon power button pulse signals on BCM GPIO 4 (Argon ONE V3 / NEO 5):
+    - Pulse 10-50 ms (double tap):       Graceful Reboot
+    - Pulse 2500-3500 ms (3-second hold): Graceful Shutdown / Poweroff
 - Sends power-off signal to Argon MCU (register 0x86 / 0xFF) on system shutdown.
 - Resilient to missing hardware (dry-run/test mode supported, error throttling).
 """
@@ -42,6 +42,17 @@ GPIO_POWER_BUTTON_PIN = 4   # BCM 4 (Header Pin 7)
 
 POLL_INTERVAL_SEC = 3.0     # Temperature sampling interval
 HYSTERESIS_TEMP = 1.0       # Temperature hysteresis to prevent fan speed jitter
+
+# Power-button pulse windows (ms). Calibrated against Argon ONE V3 / NEO 5
+# documentation: short double-tap pulses reboot, ~3s sustained hold powers off.
+PULSE_REBOOT_MIN_MS = 10.0
+PULSE_REBOOT_MAX_MS = 50.0
+PULSE_SHUTDOWN_MIN_MS = 2500.0
+PULSE_SHUTDOWN_MAX_MS = 3500.0
+# Once a shutdown command has been dispatched, ignore further button events
+# for this many seconds so mechanical bounce / spurious edges cannot re-trigger
+# reboot/shutdown while systemd is halting the system.
+SHUTDOWN_HYSTERESIS_SEC = 5.0
 
 # Configure logging
 logging.basicConfig(
@@ -221,9 +232,16 @@ def calculate_fan_speed(temp_c: float) -> int:
 # -----------------------------------------------------------------------------
 class ArgonPowerButtonMonitor(threading.Thread):
     """
-    Monitors pulse events from Argon MCU on BCM GPIO 4:
-      - Pulse 15 - 35 ms: Reboot
-      - Pulse 35 - 70 ms: Shutdown
+    Monitors pulse events from Argon MCU on BCM GPIO 4.
+
+    Argon ONE V3 / NEO 5 power-button pulse timing protocol
+    (per Argon40 documentation):
+      - 10 ms - 50 ms (double-tap):            -> Graceful Reboot
+      - 2500 ms - 3500 ms (3-second hold):    -> Graceful Shutdown
+
+    After a shutdown command fires, the monitor enters a 5-second hysteresis
+    window during which further button events are ignored to prevent bounce
+    or spurious edges from re-triggering actions while the system is halting.
     """
 
     def __init__(self, dry_run=False):
@@ -232,6 +250,9 @@ class ArgonPowerButtonMonitor(threading.Thread):
         self.running = True
         self.chip = None
         self.line_req = None
+        # Monotonic deadline; while "now" is before this, _handle_pulse() drops
+        # any incoming edge. Set after a shutdown command is dispatched.
+        self.shutdown_lock_until = None
 
     def _find_rp1_gpiochip(self):
         """Find the Raspberry Pi 5 RP1 GPIO chip or fallback."""
@@ -339,23 +360,61 @@ class ArgonPowerButtonMonitor(threading.Thread):
             logger.warning("gpiod v1 line request failed: %s. Button monitoring inactive.", err)
 
     def _handle_pulse(self, pulse_ms: float):
+        """Interpret an Argon power-button pulse and dispatch the matching action.
+
+        Pulse windows (per Argon ONE V3 / NEO 5 protocol):
+          - PULSE_REBOOT_MIN_MS .. PULSE_REBOOT_MAX_MS     -> systemctl reboot
+          - PULSE_SHUTDOWN_MIN_MS .. PULSE_SHUTDOWN_MAX_MS -> systemctl poweroff
+        Anything outside those bands is logged at debug and dropped.
+        """
+        now = time.monotonic()
+
+        # Hysteresis: drop any pulse while a recent shutdown is still latching.
+        # Without this, mechanical bounce / spurious edges after a 3s hold can
+        # immediately re-trigger reboot before systemd finishes halting.
+        if self.shutdown_lock_until is not None and now < self.shutdown_lock_until:
+            logger.debug(
+                "Pulse %.1f ms ignored during shutdown lockout (%.1fs remaining).",
+                pulse_ms, self.shutdown_lock_until - now,
+            )
+            return
+
         logger.info("Argon power button pulse detected: %.1f ms", pulse_ms)
 
-        # Pulse 15ms - 35ms: Reboot requested (double-tap)
-        if 15.0 <= pulse_ms <= 35.0:
-            logger.warning("Action: REBOOT requested by Argon power button")
+        # Pulse 10 ms - 50 ms: Reboot requested (double-tap).
+        if PULSE_REBOOT_MIN_MS <= pulse_ms <= PULSE_REBOOT_MAX_MS:
+            logger.warning(
+                "Action: REBOOT requested by Argon power button (double-tap, %.1f ms)",
+                pulse_ms,
+            )
             if self.dry_run:
                 logger.info("[DRY-RUN] System reboot simulated.")
             else:
                 subprocess.run(["systemctl", "reboot"], check=False)
 
-        # Pulse 35ms - 70ms: Shutdown requested (3-second hold)
-        elif 35.0 < pulse_ms <= 70.0:
-            logger.warning("Action: SHUTDOWN requested by Argon power button")
+        # Pulse 2500 ms - 3500 ms: Shutdown requested (3-second hold).
+        elif PULSE_SHUTDOWN_MIN_MS < pulse_ms <= PULSE_SHUTDOWN_MAX_MS:
+            logger.warning(
+                "Action: SHUTDOWN requested by Argon power button (3s hold, %.1f ms)",
+                pulse_ms,
+            )
             if self.dry_run:
                 logger.info("[DRY-RUN] System shutdown simulated.")
             else:
+                # Lock out further events while systemd powers off so that
+                # button bounce cannot trigger an immediate reboot.
+                self.shutdown_lock_until = now + SHUTDOWN_HYSTERESIS_SEC
                 subprocess.run(["systemctl", "poweroff"], check=False)
+
+        else:
+            # Pulse outside either recognised band; log so mis-wiring or
+            # contact bounce is visible in debug logs without spamming INFO.
+            logger.debug(
+                "Pulse %.1f ms outside recognised %.0f-%.0f / %.0f-%.0f ms windows; ignoring.",
+                pulse_ms,
+                PULSE_REBOOT_MIN_MS, PULSE_REBOOT_MAX_MS,
+                PULSE_SHUTDOWN_MIN_MS, PULSE_SHUTDOWN_MAX_MS,
+            )
 
     def stop(self):
         self.running = False

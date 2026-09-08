@@ -3,7 +3,7 @@
     {
       "name": "Omarchy Quatro - Arch Linux ARM (Pi 5 NVMe)",
       "description": "Next-generation Arch Linux ARM workstation for Raspberry Pi 5. Features the sway Wayland compositor (Omarchy-styled: waybar, fuzzel, mako), 16k page-size kernel, PCIe Gen 3 NVMe tuning, Argon ONE / NEO 5 active cooling daemon, 8GB ZRAM swap, Chromium + SSH preinstalled, and first-boot auto-expansion.",
-      "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-termux/main/assets/banner.jpg",
+      "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/banner.png",
       "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
       "extract_size": 12884901888,
       "extract_sha256": "4d419774fc3a9609e4d6598a563537057164b67780e2350ace86caff33d1da9d",
@@ -19,9 +19,9 @@
       "website": "https://github.com/omacom/omarchy",
       "subitems": [
         {
-          "name": "Omarchy Quatro v1.0.2 (Zstandard — works out of the box)",
+          "name": "Omarchy Quatro v1.0.2 (Zstandard \u2014 works out of the box)",
           "description": "Boots straight to a sway desktop with autologin. v1.0.2 fixes first boot end-to-end: correct PARTUUIDs, working auto-resize, wayland-native SDDM autologin, complete desktop packages.",
-          "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-termux/main/assets/banner.jpg",
+          "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/banner.png",
           "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
           "extract_size": 12884901888,
           "extract_sha256": "4d419774fc3a9609e4d6598a563537057164b67780e2350ace86caff33d1da9d",

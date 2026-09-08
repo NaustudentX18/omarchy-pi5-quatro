@@ -299,7 +299,7 @@ cp "${CONFIG_TXT}" "${MNT_DIR}/boot/config.txt"
 
 
 log_info "Injecting cmdline.txt with PARTUUID=${ROOT_PARTUUID}..."
-echo "root=PARTUUID=${ROOT_PARTUUID} rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory quiet splash" > "${MNT_DIR}/boot/cmdline.txt"
+echo "root=PARTUUID=${ROOT_PARTUUID} rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory quiet" > "${MNT_DIR}/boot/cmdline.txt"
 
 if [ -f "${SCRIPT_DIR}/config/fstab" ]; then
     log_info "Injecting /etc/fstab from config/fstab template..."
@@ -382,12 +382,25 @@ pacman -Syu --noconfirm
 
 echo "[+] Installing Raspberry Pi 5 16k Kernel & Bootloader..."
 # linux-rpi-16k conflicts with the base generic kernel — remove it first
-pacman -R --noconfirm linux-aarch64 uboot-raspberrypi || true
+pacman -Q linux-aarch64 &>/dev/null && pacman -R --noconfirm linux-aarch64 || true
+pacman -Q uboot-raspberrypi &>/dev/null && pacman -R --noconfirm uboot-raspberrypi || true
 pacman -S --noconfirm --needed \
     linux-rpi-16k \
     linux-rpi-16k-headers \
     raspberrypi-bootloader \
     firmware-raspberrypi
+
+# Hard check: kernel must actually be installed (§2.3 — never silently skip)
+if [ ! -s /boot/kernel8.img ]; then
+    log_error "/boot/kernel8.img missing after linux-rpi-16k install — kernel install failed"
+    exit 1
+fi
+KERNEL_SIZE=$(stat -c %s /boot/kernel8.img)
+if [ "$KERNEL_SIZE" -lt 1048576 ]; then
+    log_error "/boot/kernel8.img is only ${KERNEL_SIZE} bytes (< 1 MB) — install likely failed"
+    exit 1
+fi
+log_success "linux-rpi-16k kernel installed (kernel8.img: ${KERNEL_SIZE} bytes)"
 
 # Ensure Pi 5 Device Tree Blob (bcm2712-rpi-5-b.dtb) is in /boot
 if [ ! -f /boot/bcm2712-rpi-5-b.dtb ]; then
@@ -591,6 +604,12 @@ if [ -f "${CONFIG_TXT}" ]; then
     log_info "config.txt re-injected post-chroot (package overwrite defence)."
 fi
 
+# Hard guard: refuse to continue if kernel install silently failed.
+[[ -s "${MNT_DIR}/boot/kernel8.img" ]] || { log_error "kernel8.img missing after install — refusing to continue"; exit 1; }
+KERNEL_SIZE=$(stat -c %s "${MNT_DIR}/boot/kernel8.img")
+[[ $KERNEL_SIZE -gt 1048576 ]] || { log_error "kernel8.img too small (${KERNEL_SIZE} bytes) — install failed"; exit 1; }
+log_success "kernel8.img present (${KERNEL_SIZE} bytes)"
+
 # ==============================================================================
 # Step 7b: Post-provision verification — FAIL LOUDLY.
 # v1.0.0 shipped a broken MBR signature; v1.0.1 shipped without a working
@@ -618,6 +637,12 @@ CRITICAL_FILES=(
     "${MNT_DIR}/usr/lib/chromium/chromium"
     "${MNT_DIR}/usr/bin/sshd"
     "${MNT_DIR}/boot/kernel8.img"
+    "${MNT_DIR}/boot/bcm2712-rpi-5-b.dtb"
+    "${MNT_DIR}/boot/start4.elf"
+    "${MNT_DIR}/boot/fixup4.dat"
+    "${MNT_DIR}/boot/bootcode4.bin"
+    "${MNT_DIR}/boot/initramfs-linux.img"
+    "${MNT_DIR}/boot/config.txt"
 )
 for f in "${CRITICAL_FILES[@]}"; do
     if [ ! -e "$f" ]; then
@@ -626,9 +651,33 @@ for f in "${CRITICAL_FILES[@]}"; do
     fi
 done
 
+# config.txt must carry the Pi 5 KMS overlay and PCIe Gen3 dtparam after re-injection
+for required_config_line in "dtoverlay=vc4-kms-v3d" "pciex1_gen=3"; do
+    if ! grep -qF "${required_config_line}" "${MNT_DIR}/boot/config.txt"; then
+        log_error "config.txt missing required directive: ${required_config_line}"
+        VERIFY_FAILURE=1
+    fi
+done
+
+# cmdline.txt must not request plymouth splash (plymouth not installed)
+if grep -q "splash" "${MNT_DIR}/boot/cmdline.txt"; then
+    log_error "cmdline.txt contains 'splash' but plymouth is not installed"
+    VERIFY_FAILURE=1
+fi
+
 # 3. Autologin must force the Wayland display server (else SDDM runs X, absent here)
 grep -q "DisplayServer=wayland" "${MNT_DIR}/etc/sddm.conf.d/autologin.conf" 2>/dev/null || {
     log_error "autologin.conf missing 'DisplayServer=wayland'"
+    VERIFY_FAILURE=1
+}
+
+# 4. Pi 5 boot config must enable KMS + PCIe Gen3 (otherwise HDMI/display or NVMe will underperform)
+grep -q '^dtoverlay=vc4-kms-v3d' "${MNT_DIR}/boot/config.txt" || {
+    log_error "config.txt missing vc4-kms-v3d overlay"
+    VERIFY_FAILURE=1
+}
+grep -q 'pciex1_gen=3' "${MNT_DIR}/boot/config.txt" || {
+    log_error "config.txt missing pciex1_gen=3"
     VERIFY_FAILURE=1
 }
 
