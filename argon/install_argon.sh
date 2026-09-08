@@ -69,6 +69,7 @@ resolve_pkg() {
         dnf:libgpiod)  echo "python3-libgpiod" ;;
         pip:smbus2)    echo "smbus2" ;;
         pip:libgpiod)  echo "" ;;  # pip cannot ship libgpiod's C library
+        *)             echo "" ;;  # unknown combo: treat as unresolvable
     esac
 }
 
@@ -89,6 +90,11 @@ install_pkgs() {
             # (Debian 12+, Ubuntu 23.04+, Arch/ALARM with externally-managed
             # python). On ALARM specifically the python-smbus2 package is
             # usually preferred; the pip fallback exists for sandboxes.
+            pip install --break-system-packages "$@"
+            ;;
+        *)
+            # Unreachable via the detection block above (PM is one of the
+            # four), but kept as a guard so unknown managers fall back to pip.
             pip install --break-system-packages "$@"
             ;;
     esac

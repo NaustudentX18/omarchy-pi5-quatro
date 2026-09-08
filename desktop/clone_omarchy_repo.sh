@@ -94,7 +94,7 @@ if [[ -d "${OMARCHY_INSTALL_DIR}/bin" ]]; then
             ln -sf "/opt/omarchy/bin/${bin_name}" "${TARGET_ROOT}/usr/local/bin/${bin_name}"
         fi
     done
-    echo "    Linked $(ls -1 "${OMARCHY_INSTALL_DIR}/bin" | wc -l) Omarchy binaries."
+    echo "    Linked $(find "${OMARCHY_INSTALL_DIR}/bin" -mindepth 1 -maxdepth 1 | wc -l) Omarchy binaries."
 fi
 
 # NOTE: No compositor shim is installed here. Sway ships its own

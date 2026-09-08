@@ -29,7 +29,7 @@ PASSWORD="omarchy"
 #   i2c     - /dev/i2c-* (Argon MCU, sensors)
 #   render  - /dev/dri/renderD* (sway / wayland)
 #   lp      - printing (future-proofing)
-GROUPS="wheel,video,audio,input,storage,seat,network,power,i2c,render,lp"
+GROUPS_CSV="wheel,video,audio,input,storage,seat,network,power,i2c,render,lp"
 DEFAULT_SHELL="/bin/zsh"
 FALLBACK_SHELL="/bin/bash"
 
@@ -59,7 +59,7 @@ mkdir -p "${TARGET_ROOT}/home"
 # 1. Ensure required system and hardware groups exist
 # ------------------------------------------------------------------------------
 echo "[+] Checking and creating required hardware & system groups..."
-IFS=',' read -ra GROUP_ARRAY <<< "${GROUPS}"
+IFS=',' read -ra GROUP_ARRAY <<< "${GROUPS_CSV}"
 for grp in "${GROUP_ARRAY[@]}"; do
     if ! run_in_target getent group "${grp}" >/dev/null 2>&1; then
         echo "    Creating missing group: ${grp}"
@@ -90,10 +90,10 @@ fi
 # ------------------------------------------------------------------------------
 if run_in_target id -u "${USERNAME}" >/dev/null 2>&1; then
     echo "[+] User '${USERNAME}' already exists. Updating groups and shell..."
-    run_in_target usermod -aG "${GROUPS}" -s "${USER_SHELL}" "${USERNAME}"
+    run_in_target usermod -aG "${GROUPS_CSV}" -s "${USER_SHELL}" "${USERNAME}"
 else
     echo "[+] Creating user '${USERNAME}'..."
-    run_in_target useradd -m -s "${USER_SHELL}" -G "${GROUPS}" "${USERNAME}"
+    run_in_target useradd -m -s "${USER_SHELL}" -G "${GROUPS_CSV}" "${USERNAME}"
 fi
 
 # ------------------------------------------------------------------------------

@@ -14,7 +14,6 @@ CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
-BOLD='\033[1m'
 NC='\033[0m'
 
 log_info()    { echo -e "${CYAN}[DOCKER BUILDER]${NC} $*"; }
@@ -41,15 +40,15 @@ docker build -t "${IMAGE_TAG}" -f "${SCRIPT_DIR}/Dockerfile" "${SCRIPT_DIR}"
 log_success "Builder container image ready."
 
 # Check if running interactively
-DOCKER_TTY_FLAGS=""
+DOCKER_TTY_FLAGS=()
 if [ -t 0 ] && [ -t 1 ]; then
-    DOCKER_TTY_FLAGS="-it"
+    DOCKER_TTY_FLAGS=(-it)
 fi
 
 log_info "Launching build inside privileged container..."
 log_info "Workspace mounted at: /workspace"
 
-docker run --rm ${DOCKER_TTY_FLAGS} \
+docker run --rm ${DOCKER_TTY_FLAGS[@]+"${DOCKER_TTY_FLAGS[@]}"} \
     --privileged \
     --net=host \
     -v /dev:/dev \

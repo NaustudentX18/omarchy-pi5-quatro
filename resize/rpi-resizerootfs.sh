@@ -106,7 +106,7 @@ if command -v sfdisk >/dev/null 2>&1; then
     SFD_STATUS=$?
     set -e
     log "${SFDISK_OUT}"
-    if [ $SFD_STATUS -eq 0 ]; then
+    if [ "$SFD_STATUS" -eq 0 ]; then
         log "sfdisk successfully expanded partition."
         GROW_SUCCESS=1
     else
@@ -118,7 +118,7 @@ fi
 # does not prompt for confirmation on in-use partitions — the previous
 # `printf Yes | parted ---pretend-input-tty` form was unreliable in chroots
 # and on first boot.
-if [ $GROW_SUCCESS -eq 0 ]; then
+if [ "$GROW_SUCCESS" -eq 0 ]; then
     if command -v parted >/dev/null 2>&1; then
         log "Attempting partition expansion using parted ${DISK_DEV} resizepart ${PART_NUM} 100%..."
         set +e
@@ -126,7 +126,7 @@ if [ $GROW_SUCCESS -eq 0 ]; then
         PARTED_STATUS=$?
         set -e
         log "${PARTED_OUT}"
-        if [ $PARTED_STATUS -ne 0 ]; then
+        if [ "$PARTED_STATUS" -ne 0 ]; then
             log "parted -s failed (code $PARTED_STATUS); retrying sfdisk as last resort"
             set +e
             printf ', +\n' | sfdisk --no-reread --force -N "${PART_NUM}" "${DISK_DEV}" >/dev/null 2>&1 || true

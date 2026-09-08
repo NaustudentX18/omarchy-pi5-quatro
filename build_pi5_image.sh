@@ -32,7 +32,6 @@ MNT_DIR="${WORK_DIR}/mnt"
 IMAGE_BASE="omarchy-pi5-quatro"
 IMAGE_FILE="${WORK_DIR}/${IMAGE_BASE}.img"
 IMAGE_SIZE="12G"
-BOOT_SIZE_MIB=512
 
 # Deterministic MBR Disk Signature (0x1974beef)
 # Produces PARTUUIDs: 1974beef-01 (boot) and 1974beef-02 (root)
@@ -102,7 +101,7 @@ cleanup() {
         losetup -d "${LOOP_DEV}" || true
     fi
 
-    if [ ${exit_code} -eq 0 ]; then
+    if [ "${exit_code}" -eq 0 ]; then
         log_success "Build completed cleanly."
     else
         log_error "Build process aborted or failed with exit code ${exit_code}."
@@ -138,10 +137,10 @@ if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
 fi
 
 # Check optional compression and zeroing tools
-if ! command -v zstd &>/dev/null && [ $SKIP_COMPRESS -eq 0 ]; then
+if ! command -v zstd &>/dev/null && [ "$SKIP_COMPRESS" -eq 0 ]; then
     log_warn "zstd not found on host. Installing or skipping zstd compression."
 fi
-if ! command -v xz &>/dev/null && [ $SKIP_COMPRESS -eq 0 ]; then
+if ! command -v xz &>/dev/null && [ "$SKIP_COMPRESS" -eq 0 ]; then
     log_warn "xz not found on host. Installing or skipping xz compression."
 fi
 if ! command -v zerofree &>/dev/null; then
@@ -700,7 +699,7 @@ grep -q "DisplayServer=wayland" "${MNT_DIR}/etc/sddm.conf.d/autologin.conf" 2>/d
     VERIFY_FAILURE=1
 }
 
-if [ $VERIFY_FAILURE -ne 0 ]; then
+if [ "$VERIFY_FAILURE" -ne 0 ]; then
     log_error "IMAGE VERIFICATION FAILED — refusing to ship a broken image. Fix and rebuild."
     exit 1
 fi
@@ -758,14 +757,14 @@ log_step "9: Multi-Threaded Compression & SHA256 Checksums"
 cd "${OUTPUT_DIR}"
 rm -f "${IMAGE_BASE}.img.zst" "${IMAGE_BASE}.img.xz" SHA256SUMS
 
-if [ $SKIP_COMPRESS -eq 1 ]; then
+if [ "$SKIP_COMPRESS" -eq 1 ]; then
     log_info "Compression skipped per --skip-compress flag."
     cp "${IMAGE_FILE}" "${OUTPUT_DIR}/${IMAGE_BASE}.img"
     sha256sum "${IMAGE_BASE}.img" > SHA256SUMS
 else
     ZSTD_LEVEL="-19"
     XZ_LEVEL="-9"
-    if [ $FAST_COMPRESS -eq 1 ]; then
+    if [ "$FAST_COMPRESS" -eq 1 ]; then
         ZSTD_LEVEL="-3"
         XZ_LEVEL="-1"
         log_info "Using fast compression levels (zstd -3, xz -1)..."
@@ -774,7 +773,7 @@ else
     # Zstandard multi-threaded compression (.img.zst)
     if command -v zstd &>/dev/null; then
         log_info "Compressing ${IMAGE_BASE}.img to .img.zst (multi-threaded, level ${ZSTD_LEVEL})..."
-        zstd -T0 ${ZSTD_LEVEL} -f "${IMAGE_FILE}" -o "${OUTPUT_DIR}/${IMAGE_BASE}.img.zst"
+        zstd -T0 "${ZSTD_LEVEL}" -f "${IMAGE_FILE}" -o "${OUTPUT_DIR}/${IMAGE_BASE}.img.zst"
         log_success "Created: ${OUTPUT_DIR}/${IMAGE_BASE}.img.zst ($(du -h "${OUTPUT_DIR}/${IMAGE_BASE}.img.zst" | awk '{print $1}'))"
     else
         log_warn "zstd command not found; skipping .img.zst generation."
@@ -783,14 +782,14 @@ else
     # XZ multi-threaded compression (.img.xz)
     if command -v xz &>/dev/null; then
         log_info "Compressing ${IMAGE_BASE}.img to .img.xz (multi-threaded, level ${XZ_LEVEL})..."
-        xz -T0 ${XZ_LEVEL} -k -c "${IMAGE_FILE}" > "${OUTPUT_DIR}/${IMAGE_BASE}.img.xz"
+        xz -T0 "${XZ_LEVEL}" -k -c "${IMAGE_FILE}" > "${OUTPUT_DIR}/${IMAGE_BASE}.img.xz"
         log_success "Created: ${OUTPUT_DIR}/${IMAGE_BASE}.img.xz ($(du -h "${OUTPUT_DIR}/${IMAGE_BASE}.img.xz" | awk '{print $1}'))"
     else
         log_warn "xz command not found; skipping .img.xz generation."
     fi
 
     log_info "Generating SHA256 checksums..."
-    sha256sum ${IMAGE_BASE}.img.* > SHA256SUMS || true
+    sha256sum "${IMAGE_BASE}".img.* > SHA256SUMS || true
     cat SHA256SUMS
 fi
 
