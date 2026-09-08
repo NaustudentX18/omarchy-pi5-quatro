@@ -95,6 +95,7 @@ xdg-user-dirs
 starship
 gum
 wtype
+# hyprpicker is compositor-agnostic (wlr-layer-shell) — works under sway too
 hyprpicker
 
 # ------------------------------------------------------------------------------

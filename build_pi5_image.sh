@@ -480,10 +480,17 @@ exec mako
 exec foot --server
 SWAYCFG_EOF
     chown omarchy:omarchy /home/omarchy/.config/sway/config
-    curl -fsSL --max-time 60 -o /home/omarchy/.local/share/omarchy/wallpaper.jpg \
-        "https://raw.githubusercontent.com/omacom/omarchy/quattro/themes/tokyo-night/backgrounds/5-oma-cityscape.jpg" \
-        && chown omarchy:omarchy /home/omarchy/.local/share/omarchy/wallpaper.jpg \
-        || echo "[!] wallpaper download skipped (non-fatal)"
+    # Wallpaper is vendored in the repo (desktop/wallpaper.jpg) and staged into
+    # the chroot at /tmp/setup/desktop/ — no build-time network dependency.
+    if install -D -m 644 -o omarchy -g omarchy \
+        /tmp/setup/desktop/wallpaper.jpg /home/omarchy/.local/share/omarchy/wallpaper.jpg 2>/dev/null; then
+        echo "[+] wallpaper installed from vendored asset"
+    else
+        curl -fsSL --max-time 60 -o /home/omarchy/.local/share/omarchy/wallpaper.jpg \
+            "https://raw.githubusercontent.com/omacom/omarchy/quattro/themes/tokyo-night/backgrounds/5-oma-cityscape.jpg" \
+            && chown omarchy:omarchy /home/omarchy/.local/share/omarchy/wallpaper.jpg \
+            || echo "[!] wallpaper unavailable (non-fatal)"
+    fi
 fi
 
 # Set default hostname
@@ -602,8 +609,14 @@ VERIFY_FAILURE=0
 
 # 1. PARTUUID: what blkid resolves for p2 must equal cmdline.txt root=
 IMG_ROOT_PARTUUID="$(blkid -s PARTUUID -o value "${LOOP_DEV}p2" 2>/dev/null)"
-CMDLINE_ROOT="$(sed -n 's/.*root=PARTUUID=\([a-z0-9-]*\).*/\1/p' "${MNT_DIR}/boot/cmdline.txt" | head -n1)"
-if [ -z "${IMG_ROOT_PARTUUID}" ] || [ "${IMG_ROOT_PARTUUID}" != "${CMDLINE_ROOT}" ]; then
+CMDLINE_ROOT="$(sed -n 's/.*root=\([^ ]*\).*/\1/p' "${MNT_DIR}/boot/cmdline.txt" | head -n1)"
+if [ -z "${CMDLINE_ROOT}" ]; then
+    log_error "cmdline.txt has no root= parameter"
+    VERIFY_FAILURE=1
+elif [[ "${CMDLINE_ROOT}" != PARTUUID=* ]]; then
+    log_error "cmdline.txt root='${CMDLINE_ROOT}' is not PARTUUID= form; verification requires PARTUUID rooting"
+    VERIFY_FAILURE=1
+elif [ -z "${IMG_ROOT_PARTUUID}" ] || [ "${IMG_ROOT_PARTUUID}" != "${CMDLINE_ROOT#PARTUUID=}" ]; then
     log_error "PARTUUID mismatch: image p2='${IMG_ROOT_PARTUUID}' cmdline root='${CMDLINE_ROOT}'"
     VERIFY_FAILURE=1
 else

@@ -2,6 +2,17 @@
 
 All notable changes to Omarchy Quatro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
+## [Unreleased]
+
+### Changed
+
+- Wallpaper vendored into the repo (`desktop/wallpaper.jpg`, staged into the
+  chroot payload) instead of downloaded at build time; curl kept as fallback.
+- Verification gate now fails loudly if `cmdline.txt` lacks `root=` or uses a
+  non-`PARTUUID=` form, instead of silently comparing against an empty string.
+- `hyprpicker` annotated as compositor-agnostic (wlr-layer-shell, works under
+  sway).
+
 ## [1.0.2] — 2026-09-08
 
 The "boots to a working desktop" release. Every failure seen on real hardware
