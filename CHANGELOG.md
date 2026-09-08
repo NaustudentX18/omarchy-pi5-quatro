@@ -2,6 +2,46 @@
 
 All notable changes to Omarchy Quatro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
+## [1.0.5] — 2026-09-08
+
+### Added — like-for-like Omarchy v4 parity
+
+**Research pass 2026-09-08** (upstream HEAD `1489450`, v4.0.0.alpha, 454 bin
+commands): the `pkgs.omarchy.org/edge/aarch64` pacman repo exists (115 pkgs)
+and makes a faithful port possible. The image now:
+
+- Adds the `[omarchy]` pacman repo (`SigLevel = Never`, upstream's own
+  external-repo pattern; `omarchy-keyring` installed for future trust).
+- Installs upstream's **canonical `install/omarchy-base.packages` list
+  straight from the fresh clone** (per-package fallback; reads live at build
+  time so rebuilds track upstream automatically), plus the omarchy-repo
+  extras: omarchy-keyring/zsh/nvim/walker/settings/audio-tuner, tensaku,
+  omacalc, omacut, omawrite, ttfx, tobi-try, herdr, aether, asdcontrol,
+  cliamp, mise-bin, walker + elephant-all (launcher + plugins),
+  quickshell-git, claude-code, crush-bin, openai-codex-bin,
+  github-copilot-cli, cursor-cli, voxtype-bin, omasnap, omatrack, omazed,
+  strata, schist-bin, once-bin, dbxcli-bin, bun-bin, openclaw,
+  nautilus-open-any-terminal, wayfreeze, sunshine, retroarch + the full
+  libretro-vice core set, yaru themes, ttf-ia-writer, tzupdate, ufw-docker,
+  localsend, hyprland-preview-share-picker.
+- Installs the **Hyprland stack from the omarchy repo** (0.56.2-3 built
+  against ALARM aquamarine soname 14 — resolves, unlike ALARM's own
+  hyprland 0.56.1). **Sway remains the default session**; Hyprland appears
+  in the SDDM session chooser. The `omarchy` meta package stays
+  best-effort (blocked upstream on `uwsm`, which has no aarch64 package).
+- Plymouth is now installed (omarchy-settings dependency) but the boot
+  still runs splashless/quiet.
+
+### Known gaps (no aarch64 package exists yet)
+
+`usage`/`dotnet-runtime`, `qemu-user-static-binfmt`, `uwsm` (→ blocks the
+`omarchy` meta), `obs-studio`, `obsidian`, `pinta`, `yay`, `asdcontrol` deps,
+`ttf-jetbrains-mono-nerd-basic` fallbacks, x86-only hardware packages
+(nvidia/intel/t2/limine), and GUI extras upstream installs optionally
+(1password, vscode, sublime, typora, perplexity, nordvpn).
+
+[1.0.5]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.4...v1.0.5
+
 ## [1.0.4] — 2026-09-08
 
 ### Added

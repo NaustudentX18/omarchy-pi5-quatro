@@ -383,6 +383,20 @@ grep -q '^DisableSandbox' /etc/pacman.conf || sed -i 's/^\[options\]/[options]\n
 
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 
+# [omarchy] upstream repo — aarch64-capable (verified 2026-09-08: omarchy.db
+# 200 OK, 115 pkgs incl. their own tooling, AI CLIs and hyprland builds built
+# against ALARM aquamarine soname 14). SigLevel=Never matches upstream's own
+# external-repo pattern (install/hardware/pacman.sh); omarchy-keyring is
+# installed below for future trust.
+if ! grep -q '^\[omarchy\]' /etc/pacman.conf; then
+    cat >> /etc/pacman.conf <<'OMARCHY_REPO_EOF'
+
+[omarchy]
+Server = https://pkgs.omarchy.org/edge/$arch
+SigLevel = Never
+OMARCHY_REPO_EOF
+fi
+
 # 2. System update & Kernel installation
 echo "[+] Updating system packages..."
 pacman -Syu --noconfirm
@@ -470,6 +484,41 @@ else
     echo "[!] Fallback: Creating local Omarchy structure..."
     mkdir -p /opt/omarchy/bin /home/omarchy/.config
 fi
+
+# 5b. Upstream Omarchy parity — like-for-like v4 port. Canonical base list is
+# read from the fresh clone so future rebuilds track upstream automatically;
+# repo extras are pinned here (omarchy-repo aarch64 pkgs that base.list
+# references). Per-package fallback so one bad name can never kill the build.
+echo "[+] Installing upstream Omarchy parity set..."
+OMARCHY_REPO_PKGS="omarchy-keyring omarchy-zsh omarchy-nvim omacalc omacut omawrite ttfx tobi-try tensaku herdr aether asdcontrol cliamp mise-bin walker elephant-all quickshell-git xdg-terminal-exec yaru-icon-theme yaru-gtk-theme ttf-ia-writer ttf-jetbrains-mono-nerd-basic tzupdate ufw-docker localsend hyprland-preview-share-picker claude-code crush-bin openai-codex-bin github-copilot-cli cursor-cli voxtype-bin omarchy-walker omarchy-settings omarchy-audio-tuner omasnap omatrack omazed strata schist-bin once-bin dbxcli-bin bun-bin openclaw nautilus-open-any-terminal wayfreeze sunshine retroarch retroarch-joypad-autoconfig-git libretro-cap32-git libretro-database-git libretro-fbneo-git libretro-vice-x128-git libretro-vice-x64-git libretro-vice-x64dtv-git libretro-vice-x64sc-git libretro-vice-xcbm2-git libretro-vice-xcbm5x0-git libretro-vice-xpet-git libretro-vice-xplus4-git libretro-vice-xscpu64-git libretro-vice-xvic-git"
+BASE_PKGS=""
+if [ -f /opt/omarchy/install/omarchy-base.packages ]; then
+    BASE_PKGS=$(grep -vE '^\s*(#|$)' /opt/omarchy/install/omarchy-base.packages)
+else
+    echo "[!] omarchy-base.packages missing from clone — repo extras only"
+fi
+FAILED_PKGS=""
+for p in $BASE_PKGS $OMARCHY_REPO_PKGS; do
+    case "$p" in
+        usage|dotnet-runtime|qemu-user-static-binfmt)
+            echo "[=] skip (no aarch64 package): $p"
+            FAILED_PKGS="$FAILED_PKGS $p"
+            continue;;
+    esac
+    pacman -S --needed --noconfirm "$p" >/dev/null 2>&1 \
+        || { echo "[!] unavailable: $p"; FAILED_PKGS="$FAILED_PKGS $p"; }
+done
+echo "[+] Parity set done. Unavailable count: $(echo $FAILED_PKGS | wc -w)"
+echo "[=] Unavailable:$FAILED_PKGS"
+
+# Hyprland stack — omarchy repo's build resolves against ALARM aquamarine
+# (soname 14). Best-effort: sway remains the default session either way.
+echo "[+] Installing Hyprland stack (omarchy repo build)..."
+pacman -S --needed --noconfirm hyprland hyprland-guiutils hyprshade hyprpm hyprtoolkit xdg-desktop-portal-hyprland \
+    || echo "[!] Hyprland stack incomplete — sway stays the default session"
+# 'omarchy' meta pulls uwsm (no aarch64 package yet) — best-effort:
+pacman -S --needed --noconfirm omarchy \
+    || echo "[!] 'omarchy' meta blocked on uwsm; deps installed individually"
 
 # Setup SDDM Wayland session configuration
 mkdir -p /etc/sddm.conf.d
@@ -684,6 +733,12 @@ CRITICAL_FILES=(
     "${MNT_DIR}/boot/fixup4.dat"
     "${MNT_DIR}/boot/initramfs-linux.img"
     "${MNT_DIR}/boot/config.txt"
+    "${MNT_DIR}/opt/omarchy/install/omarchy-base.packages"
+    "${MNT_DIR}/usr/bin/tensaku"
+    "${MNT_DIR}/usr/bin/walker"
+    "${MNT_DIR}/usr/bin/quickshell"
+    "${MNT_DIR}/usr/bin/claude"
+    "${MNT_DIR}/usr/bin/mise"
     "${MNT_DIR}/usr/lib/systemd/system-generators/zram-generator"
     "${MNT_DIR}/etc/systemd/zram-generator.conf"
     "${MNT_DIR}/usr/bin/avahi-daemon"
@@ -707,9 +762,10 @@ grep -q 'pciex1_gen=3' "${MNT_DIR}/boot/config.txt" || {
     VERIFY_FAILURE=1
 }
 
-# cmdline.txt must not request plymouth splash (plymouth not installed)
+# cmdline.txt must not request plymouth splash: plymouth IS installed now
+# (omarchy-settings dep) but the Pi 5 boots without splash — quiet console.
 if grep -q "splash" "${MNT_DIR}/boot/cmdline.txt"; then
-    log_error "cmdline.txt contains 'splash' but plymouth is not installed"
+    log_error "cmdline.txt contains 'splash' — not wired on this image"
     VERIFY_FAILURE=1
 fi
 
@@ -734,6 +790,18 @@ grep -q 'mdns4_minimal' "${MNT_DIR}/etc/nsswitch.conf" 2>/dev/null || {
     log_error "nsswitch.conf missing mdns4_minimal (nss-mdns not wired)"
     VERIFY_FAILURE=1
 }
+
+# 5. Upstream parity markers: [omarchy] repo must be configured; hyprland and
+# the 'omarchy' meta are best-effort — log their presence, don't gate on them.
+grep -q '^\[omarchy\]' "${MNT_DIR}/etc/pacman.conf" 2>/dev/null || {
+    log_error "pacman.conf missing [omarchy] repo block"
+    VERIFY_FAILURE=1
+}
+if [ -e "${MNT_DIR}/usr/bin/Hyprland" ]; then
+    log_info "Hyprland stack present (sway still default session)"
+else
+    log_info "Hyprland absent — sway-only image (ALARM/omarchy repo drift?)"
+fi
 
 if [ "$VERIFY_FAILURE" -ne 0 ]; then
     log_error "IMAGE VERIFICATION FAILED — refusing to ship a broken image. Fix and rebuild."
