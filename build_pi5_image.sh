@@ -477,6 +477,25 @@ mkdir -p /etc/sudoers.d
 echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/010_wheel_nopasswd
 chmod 0440 /etc/sudoers.d/010_wheel_nopasswd
 
+# 4b. Locale & Terminal Launcher Configuration
+echo "[+] Configuring system locale (en_US.UTF-8)..."
+if [ -f /etc/locale.gen ]; then
+    sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+    locale-gen || echo "[!] locale-gen failed"
+fi
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+echo "LANG=en_US.UTF-8" >> /etc/environment
+echo "LC_ALL=en_US.UTF-8" >> /etc/environment
+
+# Configure fuzzel terminal for CLI applications (e.g. btop, lazygit, lazydocker)
+mkdir -p /etc/xdg/fuzzel /etc/skel/.config/fuzzel /home/omarchy/.config/fuzzel
+cat << 'EOF_FUZZEL' | tee /etc/xdg/fuzzel/fuzzel.ini /etc/skel/.config/fuzzel/fuzzel.ini /home/omarchy/.config/fuzzel/fuzzel.ini >/dev/null
+[main]
+terminal=foot -e
+EOF_FUZZEL
+chown -R omarchy:omarchy /home/omarchy/.config/fuzzel 2>/dev/null || true
+
+
 # 5. Omarchy Quatro Clone & Desktop Integration
 echo "[+] Setting up Omarchy Quatro environment..."
 if [ -f /tmp/setup/desktop/clone_omarchy_repo.sh ]; then
