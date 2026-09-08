@@ -238,10 +238,13 @@ echo "[+] Configuring Pi 5 VideoCore VII GPU environment (sway-compatible)..."
 # wlroots-only and read by sway; the rest are general Wayland env.
 mkdir -p "${TARGET_ROOT}/etc/environment.d"
 cat <<'EOF' > "${TARGET_ROOT}/etc/environment.d/10-pi5-gpu.conf"
-# Omarchy Quatro Pi 5 VideoCore VII Environment (sway-compatible)
+# Omarchy Quatro Pi 5 VideoCore VII Environment (Hyprland / Aquamarine + Sway)
+AQ_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0
+AQ_NO_MODIFIERS=1
 MESA_LOADER_DRIVER_OVERRIDE=v3d
 LIBGL_ALWAYS_SOFTWARE=0
 WLR_RENDERER=gles2
+WLR_NO_HARDWARE_CURSORS=1
 EGL_PLATFORM=wayland
 QT_QPA_PLATFORM=wayland;xcb
 GDK_BACKEND=wayland,x11,*
@@ -250,9 +253,12 @@ EOF
 
 mkdir -p "${TARGET_ROOT}/usr/share/uwsm/env.d"
 cat <<'EOF' > "${TARGET_ROOT}/usr/share/uwsm/env.d/15-pi5-gpu"
+export AQ_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0
+export AQ_NO_MODIFIERS=1
 export MESA_LOADER_DRIVER_OVERRIDE=v3d
 export LIBGL_ALWAYS_SOFTWARE=0
 export WLR_RENDERER=gles2
+export WLR_NO_HARDWARE_CURSORS=1
 export EGL_PLATFORM=wayland
 export QT_QPA_PLATFORM=wayland;xcb
 export GDK_BACKEND=wayland,x11,*
@@ -260,17 +266,25 @@ export ELECTRON_OZONE_PLATFORM_HINT=wayland
 EOF
 
 cat <<'EOF' > "${TARGET_ROOT}/etc/profile.d/10-pi5-gpu.sh"
-# Raspberry Pi 5 GPU environment (sway-compatible subset)
+# Raspberry Pi 5 GPU environment
+export AQ_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0
+export AQ_NO_MODIFIERS=1
 export MESA_LOADER_DRIVER_OVERRIDE=v3d
 export LIBGL_ALWAYS_SOFTWARE=0
 export WLR_RENDERER=gles2
+export WLR_NO_HARDWARE_CURSORS=1
 EOF
 chmod 0644 "${TARGET_ROOT}/etc/profile.d/10-pi5-gpu.sh"
+
+# Ensure user local share omarchy symlinks exist
+mkdir -p "${USER_HOME}/.local/share" "${SKEL_DIR}/.local/share"
+ln -snf /usr/share/omarchy "${USER_HOME}/.local/share/omarchy"
+ln -snf /usr/share/omarchy "${SKEL_DIR}/.local/share/omarchy"
 
 # ------------------------------------------------------------------------------
 # 6. SDDM Autologin, Session, and Theme Configuration
 # ------------------------------------------------------------------------------
-echo "[+] Configuring SDDM (theme: omarchy, session: sway, autologin: omarchy)..."
+echo "[+] Configuring SDDM (theme: omarchy, session: omarchy, autologin: omarchy)..."
 mkdir -p "${TARGET_ROOT}/etc/sddm.conf.d"
 mkdir -p "${TARGET_ROOT}/usr/share/sddm/themes"
 
@@ -301,14 +315,15 @@ EOF
 cat <<'EOF' > "${TARGET_ROOT}/etc/sddm.conf.d/20-autologin.conf"
 [Autologin]
 User=omarchy
-Session=sway
+Session=omarchy
 Relogin=false
 EOF
 
-# Ensure Hyprland wayland-session exists ONLY if the binary is installed.
-# Hyprland is not in packages.list (unbuildable on ALARM as of v1.0.2 — see CHANGELOG).
-# Re-enable with: sudo pacman -S hyprland aquamarine
+# Ensure Omarchy and Hyprland wayland-sessions exist
 mkdir -p "${TARGET_ROOT}/usr/share/wayland-sessions"
+if [[ -f "${OMARCHY_INSTALL_DIR}/default/wayland-sessions/omarchy.desktop" ]]; then
+    cp -a "${OMARCHY_INSTALL_DIR}/default/wayland-sessions/omarchy.desktop" "${TARGET_ROOT}/usr/share/wayland-sessions/"
+fi
 if [[ -x "${TARGET_ROOT}/usr/bin/Hyprland" && ! -f "${TARGET_ROOT}/usr/share/wayland-sessions/hyprland.desktop" ]]; then
     cat <<'EOF' > "${TARGET_ROOT}/usr/share/wayland-sessions/hyprland.desktop"
 [Desktop Entry]

@@ -85,7 +85,8 @@ polkit
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
-ttf-jetbrains-mono-nerd
+ttf-jetbrains-mono-nerd-basic
+otf-font-awesome
 fontconfig
 
 # ------------------------------------------------------------------------------
@@ -98,6 +99,8 @@ xdg-utils
 xdg-user-dirs
 starship
 gum
+uwsm
+ydotool
 wtype
 # hyprpicker is compositor-agnostic (wlr-layer-shell) — works under sway too
 hyprpicker

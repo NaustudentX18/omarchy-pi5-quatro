@@ -544,11 +544,13 @@ echo "[=] Unavailable:$FAILED_PKGS"
 echo "[+] Installing Hyprland stack (omarchy repo builds)..."
 pacman -S --needed --noconfirm \
     omarchy/hyprland omarchy/hyprland-guiutils omarchy/hyprtoolkit \
-    omarchy/hyprshade omarchy/hyprpm xdg-desktop-portal-hyprland \
-    || echo "[!] Hyprland stack incomplete — sway stays the default session"
-# 'omarchy' meta pulls uwsm (no aarch64 package yet) — best-effort:
-pacman -S --needed --noconfirm omarchy \
-    || echo "[!] 'omarchy' meta blocked on uwsm; deps installed individually"
+    omarchy/hyprshade omarchy/hyprpm xdg-desktop-portal-hyprland uwsm \
+    otf-font-awesome ttf-jetbrains-mono-nerd-basic ydotool \
+    || echo "[!] Hyprland stack package install notice"
+
+echo "[+] Installing official Omarchy meta-package..."
+pacman -S --needed --noconfirm --overwrite "*" omarchy omarchy-settings \
+    || echo "[!] Notice: omarchy meta-package install warning"
 
 # Setup SDDM Wayland session configuration
 mkdir -p /etc/sddm.conf.d
@@ -564,7 +566,7 @@ EnableHiDPI=true
 
 [Autologin]
 User=omarchy
-Session=sway.desktop
+Session=omarchy
 SDDM_EOF
 
 # 5b. Sway session config + wallpaper for the omarchy user (out-of-box desktop)
@@ -752,9 +754,17 @@ SWAYCFG_EOF
     cp /home/omarchy/.config/sway/config /etc/skel/.config/sway/config
 
 
+    # Setup Omarchy Hyprland Lua environment and walker/elephant integrations
+    echo "[+] Initializing Omarchy Hyprland Lua configuration..."
+    mkdir -p /home/omarchy/.local/share /etc/skel/.local/share
+    ln -snf /usr/share/omarchy /home/omarchy/.local/share/omarchy
+    ln -snf /usr/share/omarchy /etc/skel/.local/share/omarchy
+    su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; /usr/bin/omarchy-refresh-hyprland || true"
+    su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; bash /usr/share/omarchy/install/config/walker-elephant.sh || true"
+
     # Pre-generate Tokyo Night theme so waybar.css and all dotfiles exist on first boot
     echo "[+] Pre-generating Tokyo Night theme for omarchy user..."
-    su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; /usr/local/bin/omarchy-theme-set 'tokyo-night' || true"
+    su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; /usr/bin/omarchy-theme-set 'tokyo-night' || true"
 
     # Wallpaper is vendored in the repo (desktop/wallpaper.jpg) and staged into
     # the chroot at /tmp/setup/desktop/ — no build-time network dependency.
