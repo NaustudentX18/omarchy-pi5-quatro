@@ -667,7 +667,6 @@ CRITICAL_FILES=(
     "${MNT_DIR}/boot/bcm2712-rpi-5-b.dtb"
     "${MNT_DIR}/boot/start4.elf"
     "${MNT_DIR}/boot/fixup4.dat"
-    "${MNT_DIR}/boot/bootcode4.bin"
     "${MNT_DIR}/boot/initramfs-linux.img"
     "${MNT_DIR}/boot/config.txt"
 )
