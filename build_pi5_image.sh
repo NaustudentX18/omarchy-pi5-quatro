@@ -552,24 +552,193 @@ SDDM_EOF
 if id omarchy >/dev/null 2>&1; then
     mkdir -p /home/omarchy/.config/sway /home/omarchy/.local/share/omarchy
     cat << 'SWAYCFG_EOF' > /home/omarchy/.config/sway/config
-# Omarchy Quatro - sway session
+# ==============================================================================
+# Omarchy Quatro - Sway Session Configuration
+# ==============================================================================
+
+# Modifiers
 set $mod Mod4
+
+# Default Programs
 set $term foot
 set $menu fuzzel
+
+# Propagate Wayland environment to DBus and systemd user services
 exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+
+# Wallpaper
 output * bg /home/omarchy/.local/share/omarchy/wallpaper.jpg fill
-bindsym $mod+Return exec $term
+
+# ------------------------------------------------------------------------------
+# 1. Launchers & Menus
+# ------------------------------------------------------------------------------
 bindsym $mod+d exec $menu
 bindsym $mod+space exec $menu
-bindsym $mod+Shift+b exec chromium
-bindsym $mod+Shift+f exec nautilus
+bindsym $mod+Mod1+space exec omarchy-menu
+bindsym $mod+Escape exec omarchy-menu system
+bindsym $mod+k exec omarchy-menu-keybindings
+
+# ------------------------------------------------------------------------------
+# 2. Terminal & Shells
+# ------------------------------------------------------------------------------
+bindsym $mod+Return exec $term
+bindsym $mod+Mod1+Return exec foot -e bash -c "tmux attach || tmux new -s Work"
+
+# ------------------------------------------------------------------------------
+# 3. Core Applications (SUPER + SHIFT)
+# ------------------------------------------------------------------------------
+bindsym $mod+Shift+Return exec omarchy-launch-browser
+bindsym $mod+Shift+b exec omarchy-launch-browser
+bindsym $mod+Shift+Mod1+b exec omarchy-launch-browser --private
+bindsym $mod+Shift+f exec nautilus --new-window
+bindsym $mod+Shift+n exec omarchy-launch-editor
+bindsym $mod+Shift+d exec foot -e lazydocker
+bindsym $mod+Shift+m exec omarchy-launch-or-focus spotify
+bindsym $mod+Shift+Mod1+m exec foot -e cliamp
+bindsym $mod+Shift+g exec signal-desktop
+bindsym $mod+Shift+o exec obsidian
+bindsym $mod+Shift+w exec typora
+bindsym $mod+Shift+slash exec 1password
+
+# ------------------------------------------------------------------------------
+# 4. Web Applications (SUPER + SHIFT)
+# ------------------------------------------------------------------------------
+bindsym $mod+Shift+a exec omarchy-launch-webapp "https://chatgpt.com"
+bindsym $mod+Shift+Mod1+a exec omarchy-launch-webapp "https://grok.com"
+bindsym $mod+Shift+c exec omarchy-launch-webapp "https://app.hey.com/calendar/weeks/"
+bindsym $mod+Shift+e exec omarchy-launch-webapp "https://app.hey.com"
+bindsym $mod+Shift+y exec omarchy-launch-webapp "https://youtube.com/"
+bindsym $mod+Shift+Mod1+g exec omarchy-launch-or-focus-webapp WhatsApp "https://web.whatsapp.com/"
+bindsym $mod+Shift+Ctrl+g exec omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"
+bindsym $mod+Shift+p exec omarchy-launch-or-focus-webapp "Google Photos" "https://photos.google.com/"
+bindsym $mod+Shift+x exec omarchy-launch-webapp "https://x.com/"
+bindsym $mod+Shift+Mod1+x exec omarchy-launch-webapp "https://x.com/compose/post"
+
+# ------------------------------------------------------------------------------
+# 5. Quick Controls & Utility Menus (SUPER + CTRL)
+# ------------------------------------------------------------------------------
+bindsym $mod+Ctrl+e exec omarchy-launch-walker -m symbols
+bindsym $mod+Ctrl+c exec omarchy-menu capture
+bindsym $mod+Ctrl+o exec omarchy-menu toggle
+bindsym $mod+Ctrl+h exec omarchy-menu hardware
+bindsym $mod+Ctrl+s exec omarchy-menu share
+bindsym $mod+Ctrl+r exec omarchy-menu reminder-set
+bindsym $mod+Ctrl+a exec omarchy-launch-audio
+bindsym $mod+Ctrl+b exec omarchy-launch-bluetooth
+bindsym $mod+Ctrl+w exec omarchy-launch-wifi
+bindsym $mod+Ctrl+t exec foot -e btop
+bindsym $mod+Ctrl+l exec omarchy-system-lock
+
+# ------------------------------------------------------------------------------
+# 6. Aesthetics & Theme Controls
+# ------------------------------------------------------------------------------
+bindsym $mod+Shift+space exec omarchy-toggle-waybar
+bindsym $mod+Ctrl+space exec omarchy-menu background
+bindsym $mod+Shift+Ctrl+space exec omarchy-menu theme
+
+# ------------------------------------------------------------------------------
+# 7. Notifications (Mako)
+# ------------------------------------------------------------------------------
+bindsym $mod+comma exec makoctl dismiss
+bindsym $mod+Shift+comma exec makoctl dismiss --all
+bindsym $mod+Ctrl+comma exec omarchy-toggle-notification-silencing
+bindsym $mod+Mod1+comma exec makoctl invoke
+bindsym $mod+Shift+Mod1+comma exec makoctl restore
+
+# ------------------------------------------------------------------------------
+# 8. Screenshots & Captures
+# ------------------------------------------------------------------------------
+bindsym Print exec omarchy-capture-screenshot
+bindsym Mod1+Print exec omarchy-menu screenrecord
+bindsym $mod+Print exec pkill hyprpicker || hyprpicker -a
+bindsym $mod+Ctrl+Print exec omarchy-capture-text-extraction
+
+# ------------------------------------------------------------------------------
+# 9. Hardware & Media Keys
+# ------------------------------------------------------------------------------
+bindsym XF86AudioRaiseVolume exec omarchy-swayosd-client --output-volume raise
+bindsym XF86AudioLowerVolume exec omarchy-swayosd-client --output-volume lower
+bindsym XF86AudioMute exec omarchy-swayosd-client --output-volume mute-toggle
+bindsym XF86AudioMicMute exec omarchy-audio-input-mute
+bindsym XF86MonBrightnessUp exec omarchy-brightness-display +5%
+bindsym XF86MonBrightnessDown exec omarchy-brightness-display 5%-
+bindsym XF86AudioNext exec omarchy-swayosd-client --playerctl next
+bindsym XF86AudioPrev exec omarchy-swayosd-client --playerctl previous
+bindsym XF86AudioPlay exec omarchy-swayosd-client --playerctl play-pause
+bindsym XF86AudioPause exec omarchy-swayosd-client --playerctl play-pause
+
+# ------------------------------------------------------------------------------
+# 10. Window Management & Layout
+# ------------------------------------------------------------------------------
+bindsym $mod+q kill
+bindsym $mod+w kill
 bindsym $mod+Shift+q kill
 bindsym $mod+Shift+e exec swaynag -t warning -m "Exit sway?" -B "Exit" "swaymsg exit"
+bindsym $mod+f fullscreen toggle
+bindsym $mod+Shift+v floating toggle
+bindsym $mod+s layout stacking
+bindsym $mod+t layout tabbed
+bindsym $mod+e layout toggle split
+
+# Focus Navigation
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# Move Windows
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# ------------------------------------------------------------------------------
+# 11. Workspaces
+# ------------------------------------------------------------------------------
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+6 workspace number 6
+bindsym $mod+7 workspace number 7
+bindsym $mod+8 workspace number 8
+bindsym $mod+9 workspace number 9
+bindsym $mod+0 workspace number 10
+
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+bindsym $mod+Shift+6 move container to workspace number 6
+bindsym $mod+Shift+7 move container to workspace number 7
+bindsym $mod+Shift+8 move container to workspace number 8
+bindsym $mod+Shift+9 move container to workspace number 9
+bindsym $mod+Shift+0 move container to workspace number 10
+
+bindsym $mod+Tab workspace next
+bindsym $mod+Shift+Tab workspace prev
+
+# ------------------------------------------------------------------------------
+# 12. Daemons & Background Services
+# ------------------------------------------------------------------------------
 exec waybar
 exec mako
 exec foot --server
 SWAYCFG_EOF
     chown omarchy:omarchy /home/omarchy/.config/sway/config
+    mkdir -p /etc/skel/.config/sway
+    cp /home/omarchy/.config/sway/config /etc/skel/.config/sway/config
+
 
     # Pre-generate Tokyo Night theme so waybar.css and all dotfiles exist on first boot
     echo "[+] Pre-generating Tokyo Night theme for omarchy user..."
