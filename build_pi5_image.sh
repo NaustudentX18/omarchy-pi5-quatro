@@ -361,6 +361,14 @@ cat << 'EOF_CHROOT' > "${CHROOT_SETUP_DIR}/provision.sh"
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Logging helpers — the outer build script's log_* functions do NOT exist
+# inside this chroot script (learned 2026-09-08: bare log_success here made
+# the build die with exit 127 AFTER a fully successful kernel install).
+log_error()   { echo "[ERROR] $*" >&2; }
+log_success() { echo "[SUCCESS] $*"; }
+log_info()    { echo "[INFO] $*"; }
+log_warn()    { echo "[WARN] $*"; }
+
 echo "======================================================================"
 echo "[+] Starting In-Chroot Provisioning for Omarchy Quatro Pi 5..."
 echo "======================================================================"
