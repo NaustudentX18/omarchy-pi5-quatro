@@ -556,6 +556,7 @@ if id omarchy >/dev/null 2>&1; then
 set $mod Mod4
 set $term foot
 set $menu fuzzel
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 output * bg /home/omarchy/.local/share/omarchy/wallpaper.jpg fill
 bindsym $mod+Return exec $term
 bindsym $mod+d exec $menu
@@ -566,6 +567,11 @@ exec mako
 exec foot --server
 SWAYCFG_EOF
     chown omarchy:omarchy /home/omarchy/.config/sway/config
+
+    # Pre-generate Tokyo Night theme so waybar.css and all dotfiles exist on first boot
+    echo "[+] Pre-generating Tokyo Night theme for omarchy user..."
+    su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; /usr/local/bin/omarchy-theme-set 'tokyo-night' || true"
+
     # Wallpaper is vendored in the repo (desktop/wallpaper.jpg) and staged into
     # the chroot at /tmp/setup/desktop/ — no build-time network dependency.
     if install -D -m 644 -o omarchy -g omarchy \

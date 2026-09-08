@@ -54,14 +54,22 @@ fi
 RESOLVED_SHA="$(git -C "${OMARCHY_INSTALL_DIR}" rev-parse HEAD 2>/dev/null || echo unknown)"
 echo "    Resolved Omarchy commit: ${RESOLVED_SHA}"
 
+# Ensure proper permissions across /opt/omarchy
+chmod -R a+rX "${OMARCHY_INSTALL_DIR}"
+
 # Ensure /usr/share/omarchy symlink points to /opt/omarchy for compatibility
 mkdir -p "${TARGET_ROOT}/usr/share"
 ln -snf /opt/omarchy "${TARGET_ROOT}/usr/share/omarchy"
 
 # Set system Omarchy configuration
 cat <<'EOF' > "${TARGET_ROOT}/etc/omarchy.conf"
-export OMARCHY_PATH=/opt/omarchy
+export OMARCHY_PATH=/usr/share/omarchy
 EOF
+
+mkdir -p "${TARGET_ROOT}/etc/environment.d"
+echo "OMARCHY_PATH=/usr/share/omarchy" >> "${TARGET_ROOT}/etc/environment"
+echo "OMARCHY_PATH=/usr/share/omarchy" > "${TARGET_ROOT}/etc/environment.d/10-omarchy.conf"
+
 
 mkdir -p "${TARGET_ROOT}/etc/profile.d"
 cat <<'EOF' > "${TARGET_ROOT}/etc/profile.d/omarchy.sh"
