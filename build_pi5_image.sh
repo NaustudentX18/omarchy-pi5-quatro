@@ -31,7 +31,7 @@ MNT_DIR="${WORK_DIR}/mnt"
 
 IMAGE_BASE="omarchy-pi5-quatro"
 IMAGE_FILE="${WORK_DIR}/${IMAGE_BASE}.img"
-IMAGE_SIZE="12G"
+IMAGE_SIZE="24G"
 
 # Deterministic MBR Disk Signature (0x1974beef)
 # Produces PARTUUIDs: 1974beef-01 (boot) and 1974beef-02 (root)
@@ -505,16 +505,22 @@ for p in $BASE_PKGS $OMARCHY_REPO_PKGS; do
             FAILED_PKGS="$FAILED_PKGS $p"
             continue;;
     esac
-    pacman -S --needed --noconfirm "$p" >/dev/null 2>&1 \
-        || { echo "[!] unavailable: $p"; FAILED_PKGS="$FAILED_PKGS $p"; }
+    pacman -S --needed --noconfirm "$p" 2>&1 | tail -2
+    if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+        # keep the image rootfs from filling with the package cache
+        rm -f /var/cache/pacman/pkg/*.pkg.tar.zst /var/cache/pacman/pkg/*.pkg.tar.xz
+    else
+        echo "[!] unavailable: $p"
+        FAILED_PKGS="$FAILED_PKGS $p"
+    fi
 done
 echo "[+] Parity set done. Unavailable count: $(echo $FAILED_PKGS | wc -w)"
 echo "[=] Unavailable:$FAILED_PKGS"
 
-# Hyprland stack — omarchy repo's build resolves against ALARM aquamarine
-# (soname 14). Best-effort: sway remains the default session either way.
-echo "[+] Installing Hyprland stack (omarchy repo build)..."
-pacman -S --needed --noconfirm hyprland hyprland-guiutils hyprshade hyprpm hyprtoolkit xdg-desktop-portal-hyprland \
+echo "[+] Installing Hyprland stack (omarchy repo builds)..."
+pacman -S --needed --noconfirm \
+    omarchy/hyprland omarchy/hyprland-guiutils omarchy/hyprtoolkit \
+    omarchy/hyprshade omarchy/hyprpm xdg-desktop-portal-hyprland \
     || echo "[!] Hyprland stack incomplete — sway stays the default session"
 # 'omarchy' meta pulls uwsm (no aarch64 package yet) — best-effort:
 pacman -S --needed --noconfirm omarchy \
