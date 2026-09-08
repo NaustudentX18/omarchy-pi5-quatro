@@ -2,7 +2,7 @@
 
 All notable changes to Omarchy Quatro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
-## [Unreleased] — 2026-09-08
+## [1.0.3] — 2026-09-08
 
 ### Fixed (audit pass)
 
@@ -27,12 +27,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioni
 
 - Wallpaper vendored into the repo (`desktop/wallpaper.jpg`, staged into the
   chroot payload) instead of downloaded at build time; curl kept as fallback.
+- `git` added to the image (`packages.list`), so the upstream Omarchy repo now
+  actually clones at build time (`/opt/omarchy`, 284 binaries linked, dotfiles
+  seeded) instead of silently falling back to the local skeleton.
 - Verification gate now fails loudly if `cmdline.txt` lacks `root=` or uses a
   non-`PARTUUID=` form, instead of silently comparing against an empty string.
 - `hyprpicker` annotated as compositor-agnostic (wlr-layer-shell, works under
   sway).
 
-[Unreleased]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.2...HEAD
+[1.0.3]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.2...v1.0.3
 
 ## [1.0.2] — 2026-09-08
 

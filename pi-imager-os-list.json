@@ -6,9 +6,9 @@
       "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/banner.png",
       "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
       "extract_size": 12884901888,
-      "extract_sha256": "4d419774fc3a9609e4d6598a563537057164b67780e2350ace86caff33d1da9d",
-      "image_download_size": 3216839336,
-      "sha256": "cef24b1749e2d3b85bd393d6c796c9f8d62254d82a3a92a429cde8e5d6836d81",
+      "extract_sha256": "584b1601e0da3cb6abf6a731e95a04d8e0a3330e84d843dff9ee1f4077eb79ce",
+      "image_download_size": 3262505583,
+      "sha256": "376ad7a93a8e8d2bc775e290bb25d42f03a71ce00aee63a827091a4fe8d24d45",
       "release_date": "2026-09-08",
       "init_format": "systemd",
       "devices": [
@@ -19,14 +19,14 @@
       "website": "https://github.com/omacom/omarchy",
       "subitems": [
         {
-          "name": "Omarchy Quatro v1.0.2 (Zstandard \u2014 works out of the box)",
-          "description": "Boots straight to a sway desktop with autologin. v1.0.2 fixes first boot end-to-end: correct PARTUUIDs, working auto-resize, wayland-native SDDM autologin, complete desktop packages.",
+          "name": "Omarchy Quatro v1.0.3 (Zstandard \u2014 audit-hardened, works out of the box)",
+          "description": "Boots straight to a sway desktop with autologin. v1.0.3 bakes in the 2026-09-08 audit pass: verified PARTUUIDs, sway-native SDDM autologin (DisplayServer=wayland), sfdisk first-boot resize, corrected Argon power-button/fan daemon, and upstream Omarchy tooling synced into /opt/omarchy.",
           "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/banner.png",
           "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
           "extract_size": 12884901888,
-          "extract_sha256": "4d419774fc3a9609e4d6598a563537057164b67780e2350ace86caff33d1da9d",
-          "image_download_size": 3216839336,
-          "sha256": "cef24b1749e2d3b85bd393d6c796c9f8d62254d82a3a92a429cde8e5d6836d81",
+          "extract_sha256": "584b1601e0da3cb6abf6a731e95a04d8e0a3330e84d843dff9ee1f4077eb79ce",
+          "image_download_size": 3262505583,
+          "sha256": "376ad7a93a8e8d2bc775e290bb25d42f03a71ce00aee63a827091a4fe8d24d45",
           "release_date": "2026-09-08",
           "init_format": "systemd",
           "devices": [
