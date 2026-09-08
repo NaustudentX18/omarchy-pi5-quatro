@@ -176,6 +176,13 @@ if [[ -d "${OMARCHY_INSTALL_DIR}/applications" ]]; then
     cp -a "${OMARCHY_INSTALL_DIR}/applications/." "${TARGET_ROOT}/usr/share/applications/" 2>/dev/null || true
 fi
 
+# Generate default webapps desktop entries (ChatGPT, Discord, YouTube, GitHub, etc.)
+if [[ -f "${OMARCHY_INSTALL_DIR}/install/packaging/webapps.sh" ]]; then
+    echo "    Generating default Omarchy webapp launchers..."
+    HOME="${USER_HOME}" bash "${OMARCHY_INSTALL_DIR}/install/packaging/webapps.sh" 2>/dev/null || true
+    HOME="${SKEL_DIR}" bash "${OMARCHY_INSTALL_DIR}/install/packaging/webapps.sh" 2>/dev/null || true
+fi
+
 # Icons & Pixmaps
 mkdir -p "${TARGET_ROOT}/usr/share/pixmaps"
 mkdir -p "${TARGET_ROOT}/usr/share/icons/hicolor/256x256/apps"
@@ -183,6 +190,10 @@ if [[ -f "${OMARCHY_INSTALL_DIR}/icon.png" ]]; then
     cp "${OMARCHY_INSTALL_DIR}/icon.png" "${TARGET_ROOT}/usr/share/pixmaps/omarchy.png"
     cp "${OMARCHY_INSTALL_DIR}/icon.png" "${TARGET_ROOT}/usr/share/icons/hicolor/256x256/apps/omarchy.png"
 fi
+
+# Ensure all system applications and icon directories are world-readable
+chmod -R a+rX "${TARGET_ROOT}/usr/share/applications" "${TARGET_ROOT}/usr/share/pixmaps" "${TARGET_ROOT}/usr/share/icons" 2>/dev/null || true
+
 
 # ------------------------------------------------------------------------------
 # 4. Themes Seeding and Activation (Tokyo Night Default)
