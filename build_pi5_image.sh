@@ -692,7 +692,7 @@ bindsym XF86AudioPause exec omarchy-swayosd-client --playerctl play-pause
 bindsym $mod+q kill
 bindsym $mod+w kill
 bindsym $mod+Shift+q kill
-bindsym $mod+Shift+e exec swaynag -t warning -m "Exit sway?" -B "Exit" "swaymsg exit"
+bindsym $mod+Shift+Escape exec swaynag -t warning -m "Exit sway?" -B "Exit" "swaymsg exit"
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+v floating toggle
 bindsym $mod+s layout stacking
@@ -704,20 +704,13 @@ bindsym $mod+Left focus left
 bindsym $mod+Down focus down
 bindsym $mod+Up focus up
 bindsym $mod+Right focus right
-bindsym $mod+h focus left
-bindsym $mod+j focus down
-bindsym $mod+k focus up
-bindsym $mod+l focus right
 
 # Move Windows
 bindsym $mod+Shift+Left move left
 bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move right
-bindsym $mod+Shift+h move left
-bindsym $mod+Shift+j move down
-bindsym $mod+Shift+k move up
-bindsym $mod+Shift+l move right
+
 
 # ------------------------------------------------------------------------------
 # 11. Workspaces
