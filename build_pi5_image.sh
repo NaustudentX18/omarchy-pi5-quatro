@@ -448,6 +448,9 @@ fi
 # Setup SDDM Wayland session configuration
 mkdir -p /etc/sddm.conf.d
 cat << 'SDDM_EOF' > /etc/sddm.conf.d/autologin.conf
+[General]
+DisplayServer=wayland
+
 [Theme]
 Current=omarchy
 
@@ -456,8 +459,32 @@ EnableHiDPI=true
 
 [Autologin]
 User=omarchy
-Session=hyprland.desktop
+Session=sway.desktop
 SDDM_EOF
+
+# 5b. Sway session config + wallpaper for the omarchy user (out-of-box desktop)
+if id omarchy >/dev/null 2>&1; then
+    mkdir -p /home/omarchy/.config/sway /home/omarchy/.local/share/omarchy
+    cat << 'SWAYCFG_EOF' > /home/omarchy/.config/sway/config
+# Omarchy Quatro - sway session
+set $mod Mod4
+set $term foot
+set $menu fuzzel
+output * bg /home/omarchy/.local/share/omarchy/wallpaper.jpg fill
+bindsym $mod+Return exec $term
+bindsym $mod+d exec $menu
+bindsym $mod+Shift+q kill
+bindsym $mod+Shift+e exec swaynag -t warning -m "Exit sway?" -B "Exit" "swaymsg exit"
+exec waybar
+exec mako
+exec foot --server
+SWAYCFG_EOF
+    chown omarchy:omarchy /home/omarchy/.config/sway/config
+    curl -fsSL --max-time 60 -o /home/omarchy/.local/share/omarchy/wallpaper.jpg \
+        "https://raw.githubusercontent.com/omacom/omarchy/quattro/themes/tokyo-night/backgrounds/5-oma-cityscape.jpg" \
+        && chown omarchy:omarchy /home/omarchy/.local/share/omarchy/wallpaper.jpg \
+        || echo "[!] wallpaper download skipped (non-fatal)"
+fi
 
 # Set default hostname
 echo "omarchy-pi5" > /etc/hostname
@@ -563,6 +590,53 @@ if [ -f "${CONFIG_TXT}" ]; then
     cp "${CONFIG_TXT}" "${MNT_DIR}/boot/config.txt"
     log_info "config.txt re-injected post-chroot (package overwrite defence)."
 fi
+
+# ==============================================================================
+# Step 7b: Post-provision verification — FAIL LOUDLY.
+# v1.0.0 shipped a broken MBR signature; v1.0.1 shipped without a working
+# desktop (hyprland unresolvable in ALARM repos, autologin.conf not forced to
+# DisplayServer=wayland). Neither may ever ship silently again.
+# ==============================================================================
+log_info "Verifying critical image contents..."
+VERIFY_FAILURE=0
+
+# 1. PARTUUID: what blkid resolves for p2 must equal cmdline.txt root=
+IMG_ROOT_PARTUUID="$(blkid -s PARTUUID -o value "${LOOP_DEV}p2" 2>/dev/null)"
+CMDLINE_ROOT="$(sed -n 's/.*root=PARTUUID=\([a-z0-9-]*\).*/\1/p' "${MNT_DIR}/boot/cmdline.txt" | head -n1)"
+if [ -z "${IMG_ROOT_PARTUUID}" ] || [ "${IMG_ROOT_PARTUUID}" != "${CMDLINE_ROOT}" ]; then
+    log_error "PARTUUID mismatch: image p2='${IMG_ROOT_PARTUUID}' cmdline root='${CMDLINE_ROOT}'"
+    VERIFY_FAILURE=1
+else
+    log_success "PARTUUID match: ${IMG_ROOT_PARTUUID}"
+fi
+
+# 2. Critical files
+CRITICAL_FILES=(
+    "${MNT_DIR}/usr/bin/sway"
+    "${MNT_DIR}/usr/share/wayland-sessions/sway.desktop"
+    "${MNT_DIR}/etc/sddm.conf.d/autologin.conf"
+    "${MNT_DIR}/usr/lib/chromium/chromium"
+    "${MNT_DIR}/usr/bin/sshd"
+    "${MNT_DIR}/boot/kernel8.img"
+)
+for f in "${CRITICAL_FILES[@]}"; do
+    if [ ! -e "$f" ]; then
+        log_error "Missing critical file: $f"
+        VERIFY_FAILURE=1
+    fi
+done
+
+# 3. Autologin must force the Wayland display server (else SDDM runs X, absent here)
+grep -q "DisplayServer=wayland" "${MNT_DIR}/etc/sddm.conf.d/autologin.conf" 2>/dev/null || {
+    log_error "autologin.conf missing 'DisplayServer=wayland'"
+    VERIFY_FAILURE=1
+}
+
+if [ $VERIFY_FAILURE -ne 0 ]; then
+    log_error "IMAGE VERIFICATION FAILED — refusing to ship a broken image. Fix and rebuild."
+    exit 1
+fi
+log_success "Image verification passed."
 
 # Step 8: Image cleanup, zerofree block zeroing, unmounting, loop teardown
 # ==============================================================================

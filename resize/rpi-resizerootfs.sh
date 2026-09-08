@@ -84,36 +84,37 @@ if [ ! -b "$DISK_DEV" ]; then
     exit 1
 fi
 
-# 5. Expand partition to 100% of the disk using growpart or parted
+# 5. Expand partition to 100% of the disk
+# sfdisk (util-linux, always present) is primary. parted is fallback.
+# NOTE: parted -s prompts for confirmation on in-use partitions (aborts in
+# scripts), and cloud-utils-growpart does not exist in Arch Linux ARM repos —
+# both learned the hard way in v1.0.0/v1.0.1 first-boot failures.
 GROW_SUCCESS=0
 
-if command -v growpart >/dev/null 2>&1; then
-    log "Attempting partition expansion using growpart ${DISK_DEV} ${PART_NUM}..."
+if command -v sfdisk >/dev/null 2>&1; then
+    log "Attempting partition expansion using sfdisk ${DISK_DEV} partition ${PART_NUM}..."
     set +e
-    GROWPART_OUT="$(growpart "$DISK_DEV" "$PART_NUM" 2>&1)"
-    GP_STATUS=$?
+    SFDISK_OUT="$(printf ', +\n' | sfdisk --no-reread --force -N "${PART_NUM}" "${DISK_DEV}" 2>&1)"
+    SFD_STATUS=$?
     set -e
-
-    if [ $GP_STATUS -eq 0 ]; then
-        log "growpart successfully expanded partition: ${GROWPART_OUT}"
-        GROW_SUCCESS=1
-    elif [ $GP_STATUS -eq 1 ]; then
-        log "growpart: Partition is already sized to maximum capacity."
+    log "${SFDISK_OUT}"
+    if [ $SFD_STATUS -eq 0 ]; then
+        log "sfdisk successfully expanded partition."
         GROW_SUCCESS=1
     else
-        log "growpart warning (code $GP_STATUS): ${GROWPART_OUT}"
+        log "sfdisk warning (code $SFD_STATUS)."
     fi
 fi
 
-# Fallback to parted if growpart was unavailable or failed
+# Fallback to parted if sfdisk failed
 if [ $GROW_SUCCESS -eq 0 ]; then
     if command -v parted >/dev/null 2>&1; then
         log "Attempting partition expansion using parted ${DISK_DEV} resizepart ${PART_NUM} 100%..."
         set +e
-        parted -s "$DISK_DEV" ---pretend-input-tty resizepart "$PART_NUM" 100% 2>&1 || true
+        printf 'Yes\n' | parted ---pretend-input-tty "$DISK_DEV" resizepart "$PART_NUM" 100% 2>&1 || true
         set -e
     else
-        log "WARNING: Neither growpart nor parted is installed."
+        log "WARNING: Neither sfdisk nor parted is installed."
     fi
 fi
 

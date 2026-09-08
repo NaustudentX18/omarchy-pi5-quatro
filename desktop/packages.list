@@ -9,10 +9,13 @@
 # ------------------------------------------------------------------------------
 # Display & Compositor
 # ------------------------------------------------------------------------------
-hyprland
+# sway is the v1.0.2 default compositor. Hyprland is disabled until the Arch
+# Linux ARM repos carry a self-consistent hyprland/aquamarine set (2026-09-08:
+# repo hyprland needs libaquamarine.so=13, repo aquamarine ships soname 14).
+sway
 waybar
 sddm
-xdg-desktop-portal-hyprland
+xdg-desktop-portal-wlr
 xdg-desktop-portal-gtk
 wl-clipboard
 grim
@@ -97,7 +100,8 @@ hyprpicker
 # ------------------------------------------------------------------------------
 # System Maintenance & Desktop Essentials (audit fixes 2026-09-07)
 # ------------------------------------------------------------------------------
-cloud-utils-growpart
+parted
+git
 python-pip
 polkit-gnome
 fuzzel
