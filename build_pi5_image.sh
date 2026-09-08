@@ -560,6 +560,9 @@ exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DE
 output * bg /home/omarchy/.local/share/omarchy/wallpaper.jpg fill
 bindsym $mod+Return exec $term
 bindsym $mod+d exec $menu
+bindsym $mod+space exec $menu
+bindsym $mod+Shift+b exec chromium
+bindsym $mod+Shift+f exec nautilus
 bindsym $mod+Shift+q kill
 bindsym $mod+Shift+e exec swaynag -t warning -m "Exit sway?" -B "Exit" "swaymsg exit"
 exec waybar
