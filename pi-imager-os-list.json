@@ -2,13 +2,13 @@
   "os_list": [
     {
       "name": "Omarchy Quatro - Arch Linux ARM (Pi 5 NVMe)",
-      "description": "Next-generation Arch Linux ARM workstation for Raspberry Pi 5. Features Hyprland Wayland compositor, 16k page-size kernel, PCIe Gen 3 NVMe tuning, Argon ONE / NEO 5 active cooling daemon, 8GB ZRAM swap, and first-boot auto-expansion.",
+      "description": "Next-generation Arch Linux ARM workstation for Raspberry Pi 5. Features the sway Wayland compositor (Omarchy-styled: waybar, fuzzel, mako), 16k page-size kernel, PCIe Gen 3 NVMe tuning, Argon ONE / NEO 5 active cooling daemon, 8GB ZRAM swap, Chromium + SSH preinstalled, and first-boot auto-expansion.",
       "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-termux/main/assets/banner.jpg",
       "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
       "extract_size": 12884901888,
-      "extract_sha256": "77279dfb3e073eb77999b8318398f5660f3b52d5af4340b6563f970afb786bd0",
-      "image_download_size": 3043682323,
-      "sha256": "59e302b6f3977bcc1e116df379ab88671dfacaa8aa6da7567c9364837dc5ff2e",
+      "extract_sha256": "4d419774fc3a9609e4d6598a563537057164b67780e2350ace86caff33d1da9d",
+      "image_download_size": 3216839336,
+      "sha256": "cef24b1749e2d3b85bd393d6c796c9f8d62254d82a3a92a429cde8e5d6836d81",
       "release_date": "2026-09-08",
       "init_format": "systemd",
       "devices": [
@@ -19,14 +19,14 @@
       "website": "https://github.com/omacom/omarchy",
       "subitems": [
         {
-          "name": "Omarchy Quatro (Zstandard — recommended)",
-          "description": "Zstandard-compressed image; Raspberry Pi Imager decompresses it during the write. v1.0.1 fixes the boot PartitionUUID so first boot completes.",
+          "name": "Omarchy Quatro v1.0.2 (Zstandard — works out of the box)",
+          "description": "Boots straight to a sway desktop with autologin. v1.0.2 fixes first boot end-to-end: correct PARTUUIDs, working auto-resize, wayland-native SDDM autologin, complete desktop packages.",
           "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-termux/main/assets/banner.jpg",
           "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
           "extract_size": 12884901888,
-          "extract_sha256": "77279dfb3e073eb77999b8318398f5660f3b52d5af4340b6563f970afb786bd0",
-          "image_download_size": 3043682323,
-          "sha256": "59e302b6f3977bcc1e116df379ab88671dfacaa8aa6da7567c9364837dc5ff2e",
+          "extract_sha256": "4d419774fc3a9609e4d6598a563537057164b67780e2350ace86caff33d1da9d",
+          "image_download_size": 3216839336,
+          "sha256": "cef24b1749e2d3b85bd393d6c796c9f8d62254d82a3a92a429cde8e5d6836d81",
           "release_date": "2026-09-08",
           "init_format": "systemd",
           "devices": [

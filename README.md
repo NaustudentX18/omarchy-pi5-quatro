@@ -8,11 +8,17 @@
 
 Hyprland on Wayland · NVMe-first · GPU-accelerated · fan-cooled · Chromium + SSH baked in
 
-[![Release](https://img.shields.io/badge/release-v1.0.0-7aa2f7)](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases)
+[![Release](https://img.shields.io/badge/release-v1.0.2-7aa2f7)](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases)
 [![Target](https://img.shields.io/badge/target-Raspberry%20Pi%205%20·%20aarch64-red)](#-requirements)
 [![Desktop](https://img.shields.io/badge/desktop-Hyprland%20·%20Wayland-bb9af7)](#-whats-inside)
+
 [![License](https://img.shields.io/badge/license-MIT-9ece6a)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff9e64)](CONTRIBUTING.md)
+
+> **v1.0.2 note:** the image currently boots the same Omarchy stack on **sway**
+> (waybar · fuzzel · mako — Hyprland itself is temporarily unbuildable on Arch
+> Linux ARM due to an upstream repo desync, and returns with one
+> `pacman -Syu hyprland aquamarine` once it resolves).
 
 **Love [Omarchy](https://github.com/omacom/omarchy) but only have a Pi 5 lying around?** This repo builds you a
 bootable Arch Linux ARM image with the same philosophy — a beautiful, batteries-included Hyprland desktop —
