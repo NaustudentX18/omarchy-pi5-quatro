@@ -186,11 +186,8 @@ fi
 log_success "Rootfs tarball integrity verified."
 
 # ==============================================================================
-# Step 3: Disk image creation (12GB sparse) & partitioning
-# ==============================================================================
-log_step "3: Disk Image Creation (12GB Sparse) & Partitioning"
-
-log_info "Creating 12GB sparse image file: ${IMAGE_FILE}..."
+# Step 3: Disk image creation (sparse, IMAGE_SIZE) & partitioning
+log_info "Creating ${IMAGE_SIZE} sparse image file: ${IMAGE_FILE}..."
 rm -f "${IMAGE_FILE}"
 truncate -s "${IMAGE_SIZE}" "${IMAGE_FILE}"
 
@@ -382,6 +379,11 @@ pacman-key --populate archlinuxarm
 grep -q '^DisableSandbox' /etc/pacman.conf || sed -i 's/^\[options\]/[options]\nDisableSandbox/' /etc/pacman.conf
 
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
+grep -q '^RetryAttempts' /etc/pacman.conf || sed -i 's/^\[options\]/[options]\nRetryAttempts = 3/' /etc/pacman.conf
+# Pin de.mirror (plain HTTP, consistently fast) ahead of the geo mirror —
+# the geo endpoint flaps (2026-09-08: stalls mid-transaction). Geo stays as
+# first fallback; pacman RetryAttempts rides out brief stalls.
+sed -i '1i Server = http://de.mirror.archlinuxarm.org/$arch/$repo' /etc/pacman.d/mirrorlist
 
 # [omarchy] upstream repo — aarch64-capable (verified 2026-09-08: omarchy.db
 # 200 OK, 115 pkgs incl. their own tooling, AI CLIs and hyprland builds built
