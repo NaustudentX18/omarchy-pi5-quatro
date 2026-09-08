@@ -19,8 +19,12 @@ The daemon continuously samples `/sys/class/thermal/thermal_zone0/temp` and adju
 
 ## Power Button Pulse Protocol
 The Argon case MCU interprets button events and pulses BCM GPIO 4:
-- **Double Tap (20ms - 30ms pulse)**: Triggers graceful system reboot (`systemctl reboot`).
-- **Hold for 3s (40ms - 50ms pulse)**: Triggers graceful system shutdown (`systemctl poweroff`).
+- **Double Tap (10 ms - 50 ms pulse)**: Triggers graceful system reboot (`systemctl reboot`).
+- **Hold for 3s (2500 ms - 3500 ms pulse)**: Triggers graceful system shutdown (`systemctl poweroff`).
+
+After a shutdown command fires, the daemon enters a 5-second hysteresis window
+during which subsequent button events are ignored, preventing contact bounce from
+re-triggering actions while the system is halting.
 
 ## Files
 - `argononed.py`: Production-grade Python 3 daemon using `smbus2`/`smbus` and `gpiod`. Includes thermal hysteresis, error throttling, dry-run, and test mode.

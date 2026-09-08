@@ -3,6 +3,8 @@
 # Provides an isolated, reproducible rootfs packaging environment
 # ==============================================================================
 
+# NOTE: Pin to a digest (debian:trixie-slim@sha256:...) for byte-reproducible builds.
+# Tracking tag is acceptable for now; revisit before next release.
 FROM debian:trixie-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -32,6 +34,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     git \
     && rm -rf /var/lib/apt/lists/*
+
+# NOTE: apt packages not pinned; rebuilds may install different versions.
+# For reproducibility, capture versions with `apt-cache policy <pkg>` after update, pin with pkg=version.
 
 WORKDIR /workspace
 

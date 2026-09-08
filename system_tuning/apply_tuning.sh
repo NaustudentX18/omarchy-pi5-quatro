@@ -28,6 +28,20 @@ install -m 0644 "${SCRIPT_DIR}/99-pi5-sysctl.conf" "/etc/sysctl.d/99-pi5-sysctl.
 
 # Step 3: Apply sysctl configuration immediately
 echo "[3/3] Applying sysctl parameters..."
+
+# Detect installed RAM and sanity-check the dirty_background_bytes tuning.
+# 200 MB is appropriate for 4-8 GB Pi 5 SKUs; on smaller or much larger
+# boards the value may need to be raised/lowered.
+TOTAL_RAM_MB=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo "0")
+if [ "${TOTAL_RAM_MB}" -gt 0 ]; then
+    echo "      Detected ${TOTAL_RAM_MB} MB RAM — vm.dirty_background_bytes=200M tuned for 4-8 GB."
+    if [ "${TOTAL_RAM_MB}" -lt 4000 ] || [ "${TOTAL_RAM_MB}" -gt 16384 ]; then
+        echo "      [WARN] RAM outside 4-16 GB range; vm.dirty_background_bytes may need tuning."
+    fi
+else
+    echo "      [WARN] Could not read /proc/meminfo; RAM size unknown — leaving tuning unchanged."
+fi
+
 sysctl -p /etc/sysctl.d/99-pi5-sysctl.conf
 
 # Reload systemd generator if running
@@ -44,6 +58,6 @@ echo " System tuning successfully applied:"
 echo "   - ZRAM: 4GB swap device with zstd compression"
 echo "   - vm.swappiness = 100"
 echo "   - vm.vfs_cache_pressure = 50"
-echo "   - vm.dirty_background_ratio = 5"
+echo "   - vm.dirty_background_bytes = 200M"
 echo "   - vm.dirty_ratio = 10"
 echo "=================================================================="

@@ -85,14 +85,22 @@ if [ ! -b "$DISK_DEV" ]; then
 fi
 
 # 5. Expand partition to 100% of the disk
-# sfdisk (util-linux, always present) is primary. parted is fallback.
-# NOTE: parted -s prompts for confirmation on in-use partitions (aborts in
-# scripts), and cloud-utils-growpart does not exist in Arch Linux ARM repos —
-# both learned the hard way in v1.0.0/v1.0.1 first-boot failures.
+# sfdisk (util-linux, always present) is primary. parted is the next fallback.
+# NOTE: cloud-utils-growpart does not exist in Arch Linux ARM repos, and the
+# interactive `parted ---pretend-input-tty` form aborts in scripts — both
+# were learned the hard way in v1.0.0/v1.0.1 first-boot failures.
 GROW_SUCCESS=0
 
 if command -v sfdisk >/dev/null 2>&1; then
     log "Attempting partition expansion using sfdisk ${DISK_DEV} partition ${PART_NUM}..."
+    # sfdisk flag rationale:
+    #   --no-reread  skips re-reading the partition table while we're modifying
+    #                it (avoids a stale read racing with our write).
+    #   --force      allows operating on in-use partitions on first boot when
+    #                the root partition we're growing is the one we're booted
+    #                from.
+    #   -N N         only operate on partition number N (leaves other
+    #                partitions — e.g. the boot partition — untouched).
     set +e
     SFDISK_OUT="$(printf ', +\n' | sfdisk --no-reread --force -N "${PART_NUM}" "${DISK_DEV}" 2>&1)"
     SFD_STATUS=$?
@@ -106,23 +114,40 @@ if command -v sfdisk >/dev/null 2>&1; then
     fi
 fi
 
-# Fallback to parted if sfdisk failed
+# Fallback to parted if sfdisk failed. Use `parted -s` (script mode) so it
+# does not prompt for confirmation on in-use partitions — the previous
+# `printf Yes | parted ---pretend-input-tty` form was unreliable in chroots
+# and on first boot.
 if [ $GROW_SUCCESS -eq 0 ]; then
     if command -v parted >/dev/null 2>&1; then
         log "Attempting partition expansion using parted ${DISK_DEV} resizepart ${PART_NUM} 100%..."
         set +e
-        printf 'Yes\n' | parted ---pretend-input-tty "$DISK_DEV" resizepart "$PART_NUM" 100% 2>&1 || true
+        PARTED_OUT="$(parted -s -a opt "${DISK_DEV}" resizepart "${PART_NUM}" 100% 2>&1)"
+        PARTED_STATUS=$?
         set -e
+        log "${PARTED_OUT}"
+        if [ $PARTED_STATUS -ne 0 ]; then
+            log "parted -s failed (code $PARTED_STATUS); retrying sfdisk as last resort"
+            set +e
+            printf ', +\n' | sfdisk --no-reread --force -N "${PART_NUM}" "${DISK_DEV}" >/dev/null 2>&1 || true
+            set -e
+        fi
     else
         log "WARNING: Neither sfdisk nor parted is installed."
     fi
 fi
 
 # 6. Inform kernel and udev of partition table changes
+# Order matters here: partx updates the kernel's per-partition view, then we
+# sleep briefly (partx on first boot can return EBUSY if partprobe runs
+# before the kernel finishes settling the device), then partprobe re-reads
+# the whole-disk table, then udevadm settles. Without the sleep, resize2fs
+# can race against the kernel and fail with EBUSY on first boot.
 log "Informing kernel of updated partition table..."
 if command -v partx >/dev/null 2>&1; then
     partx -u "$ROOT_DEV" 2>/dev/null || true
 fi
+sleep 2
 if command -v partprobe >/dev/null 2>&1; then
     partprobe "$DISK_DEV" 2>/dev/null || true
 fi

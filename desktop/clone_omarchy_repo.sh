@@ -5,7 +5,7 @@
 # ==============================================================================
 # Clones Omarchy repository (branch 'quattro') into /opt/omarchy, links binaries,
 # seeds Omarchy Quatro dotfiles, themes, and configs into /home/omarchy/.config
-# and /etc/skel, configures Pi 5 VideoCore VII GPU settings for Hyprland,
+# and /etc/skel, configures Pi 5 VideoCore VII GPU env for sway-compatible Wayland compositors,
 # and configures SDDM autologin.
 #
 # Usage:
@@ -15,8 +15,11 @@
 set -euo pipefail
 
 TARGET_ROOT="${1:-/}"
-OMARCHY_REPO_URL="https://github.com/omacom/omarchy.git"
-OMARCHY_BRANCH="quattro"
+OMARCHY_REPO_URL="${OMARCHY_REPO_URL:-https://github.com/omacom/omarchy.git}"
+OMARCHY_BRANCH="${OMARCHY_BRANCH:-master}"
+# Optional: pin to a specific commit for reproducible builds.
+# Leave empty to always pull the latest commit on OMARCHY_BRANCH.
+OMARCHY_PIN_SHA="${OMARCHY_PIN_SHA:-}"
 OMARCHY_INSTALL_DIR="${TARGET_ROOT}/opt/omarchy"
 USERNAME="omarchy"
 USER_HOME="${TARGET_ROOT}/home/${USERNAME}"
@@ -33,7 +36,7 @@ echo "[+] Syncing Omarchy repository (branch: ${OMARCHY_BRANCH})..."
 mkdir -p "${TARGET_ROOT}/opt"
 
 if [[ -d "${OMARCHY_INSTALL_DIR}/.git" ]]; then
-    echo "    Repository already present at ${OMARCHY_INSTALL_DIR}. Updating branch ${OMARCHY_BRANCH}..."
+    echo "    Repository already present at ${OMARCHY_INSTALL_DIR}. Updating branch ${OMARCHY_BRANCH} from ${OMARCHY_REPO_URL}..."
     git -C "${OMARCHY_INSTALL_DIR}" fetch --depth 1 origin "${OMARCHY_BRANCH}"
     git -C "${OMARCHY_INSTALL_DIR}" checkout -B "${OMARCHY_BRANCH}" "origin/${OMARCHY_BRANCH}"
     git -C "${OMARCHY_INSTALL_DIR}" reset --hard "origin/${OMARCHY_BRANCH}"
@@ -42,6 +45,14 @@ else
     rm -rf "${OMARCHY_INSTALL_DIR}"
     git clone --depth 1 --branch "${OMARCHY_BRANCH}" "${OMARCHY_REPO_URL}" "${OMARCHY_INSTALL_DIR}"
 fi
+
+# Optional SHA pinning for reproducible builds
+if [[ -n "${OMARCHY_PIN_SHA}" ]]; then
+    echo "    Pinning Omarchy checkout to SHA ${OMARCHY_PIN_SHA}..."
+    git -C "${OMARCHY_INSTALL_DIR}" checkout "${OMARCHY_PIN_SHA}"
+fi
+RESOLVED_SHA="$(git -C "${OMARCHY_INSTALL_DIR}" rev-parse HEAD 2>/dev/null || echo unknown)"
+echo "    Resolved Omarchy commit: ${RESOLVED_SHA}"
 
 # Ensure /usr/share/omarchy symlink points to /opt/omarchy for compatibility
 mkdir -p "${TARGET_ROOT}/usr/share"
@@ -86,14 +97,10 @@ if [[ -d "${OMARCHY_INSTALL_DIR}/bin" ]]; then
     echo "    Linked $(ls -1 "${OMARCHY_INSTALL_DIR}/bin" | wc -l) Omarchy binaries."
 fi
 
-# Fallback start-hyprland launcher for SDDM / Wayland greeter if not provided
-if [[ ! -f "${TARGET_ROOT}/usr/bin/start-hyprland" && ! -f "${TARGET_ROOT}/usr/local/bin/start-hyprland" ]]; then
-    cat <<'EOF' > "${TARGET_ROOT}/usr/local/bin/start-hyprland"
-#!/bin/sh
-exec Hyprland "$@"
-EOF
-    chmod +x "${TARGET_ROOT}/usr/local/bin/start-hyprland"
-fi
+# NOTE: No compositor shim is installed here. Sway ships its own
+# /usr/bin/sway; SDDM selects it via the sway.desktop wayland session
+# entry. Hyprland, when ALARM catches up, would be selected via its
+# own desktop file (created if `pacman -S hyprland` lands a binary).
 
 # ------------------------------------------------------------------------------
 # 3. Seed Omarchy Quatro dotfiles, configs, and themes
@@ -199,112 +206,20 @@ if [[ -d "${OMARCHY_INSTALL_DIR}/themes" ]]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 5. Hyprland Configuration: Pi 5 VideoCore VII Hardware Acceleration
+# 5. Pi 5 VideoCore VII GPU environment (sway-compatible)
 # ------------------------------------------------------------------------------
-echo "[+] Setting up Hyprland VideoCore VII (BCM2712 / V3D) configurations..."
+echo "[+] Configuring Pi 5 VideoCore VII GPU environment (sway-compatible)..."
 
-# Create Pi 5 specific Hyprland lua module in Omarchy defaults and user configs
-cat <<'EOF' > "${OMARCHY_INSTALL_DIR}/default/hypr/pi5.lua"
--- ==============================================================================
--- Raspberry Pi 5 VideoCore VII Hardware Acceleration & Aquamarine DRM Settings
--- Target: BCM2712 VideoCore VII (v3d 7.1)
--- ==============================================================================
+# No pi5.lua or envs.lua injection: sway reads no custom Pi 5 config.
+# Pi 5 VideoCore VII acceleration is handled via /etc/environment.d/10-pi5-gpu.conf
+# and the Mesa v3d driver default.
 
--- Prevent scanout tearing / surface modifier mismatch on VC7
-hl.env("WLR_DRM_NO_MODIFIERS", "0")
-hl.env("AQ_NO_MODIFIERS", "0")
-
--- Designate primary Broadcom VideoCore VII KMS device node
-hl.env("AQ_DRM_DEVICES", "/dev/dri/card0")
-
--- VideoCore VII cursor overlay stabilization
-hl.env("WLR_NO_HARDWARE_CURSORS", "1")
-
--- Driver override to Broadcom V3D Gallium3D Mesa driver
-hl.env("MESA_LOADER_DRIVER_OVERRIDE", "v3d")
-hl.env("LIBGL_ALWAYS_SOFTWARE", "0")
-
--- Wayland & GLES optimization
-hl.env("WLR_RENDERER", "gles2")
-hl.env("EGL_PLATFORM", "wayland")
-hl.env("QT_QPA_PLATFORM", "wayland;xcb")
-hl.env("GDK_BACKEND", "wayland,x11,*")
-hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
-
-hl.config({
-  cursor = {
-    no_hardware_cursors = true,
-  },
-  misc = {
-    vfr = true,
-    vrr = 0,
-  },
-})
-EOF
-
-# Inject pi5 module loading into default/hypr/envs.lua if not present
-if [[ -f "${OMARCHY_INSTALL_DIR}/default/hypr/envs.lua" ]]; then
-    if ! grep -q "default.hypr.pi5" "${OMARCHY_INSTALL_DIR}/default/hypr/envs.lua"; then
-        echo 'require("default.hypr.pi5")' >> "${OMARCHY_INSTALL_DIR}/default/hypr/envs.lua"
-    fi
-fi
-
-# Deploy user and skel Hyprland configuration
-for dest in "${USER_HOME}" "${SKEL_DIR}"; do
-    mkdir -p "${dest}/.config/hypr"
-    cp "${OMARCHY_INSTALL_DIR}/default/hypr/pi5.lua" "${dest}/.config/hypr/pi5.lua"
-
-    # Ensure hyprland.conf exists with explicit VideoCore VII environment overrides
-    cat <<'EOF' > "${dest}/.config/hypr/pi5.conf"
-# ==============================================================================
-# Omarchy Quatro Pi 5 - Hyprland VideoCore VII DRM & Rendering Parameters
-# ==============================================================================
-env = WLR_DRM_NO_MODIFIERS,0
-env = AQ_NO_MODIFIERS,0
-env = AQ_DRM_DEVICES,/dev/dri/card0
-env = WLR_NO_HARDWARE_CURSORS,1
-env = MESA_LOADER_DRIVER_OVERRIDE,v3d
-env = LIBGL_ALWAYS_SOFTWARE,0
-env = WLR_RENDERER,gles2
-env = EGL_PLATFORM,wayland
-env = QT_QPA_PLATFORM,wayland;xcb
-env = GDK_BACKEND,wayland,x11,*
-env = ELECTRON_OZONE_PLATFORM_HINT,wayland
-
-cursor {
-    no_hardware_cursors = true
-}
-
-misc {
-    vfr = true
-    vrr = 0
-}
-EOF
-
-    # If hyprland.conf exists, source pi5.conf; otherwise copy template
-    if [[ -f "${dest}/.config/hypr/hyprland.conf" ]]; then
-        if ! grep -q "pi5.conf" "${dest}/.config/hypr/hyprland.conf"; then
-            echo -e "\nsource = ~/.config/hypr/pi5.conf" >> "${dest}/.config/hypr/hyprland.conf"
-        fi
-    fi
-
-    # If hyprland.lua exists, ensure require("hypr.pi5") is present
-    if [[ -f "${dest}/.config/hypr/hyprland.lua" ]]; then
-        if ! grep -q "hypr.pi5" "${dest}/.config/hypr/hyprland.lua"; then
-            sed -i '/require("default.hypr.omarchy")/a require("hypr.pi5")' "${dest}/.config/hypr/hyprland.lua" || \
-                echo 'require("hypr.pi5")' >> "${dest}/.config/hypr/hyprland.lua"
-        fi
-    fi
-done
-
-# System-wide GPU environment configurations
+# System-wide GPU environment configurations.
+# Sway-applicable vars only. AQ_* / WLR_NO_HARDWARE_CURSORS / WLR_RENDERER are
+# wlroots-only and read by sway; the rest are general Wayland env.
 mkdir -p "${TARGET_ROOT}/etc/environment.d"
 cat <<'EOF' > "${TARGET_ROOT}/etc/environment.d/10-pi5-gpu.conf"
-# Omarchy Quatro Pi 5 VideoCore VII Environment
-WLR_DRM_NO_MODIFIERS=0
-AQ_NO_MODIFIERS=0
-AQ_DRM_DEVICES=/dev/dri/card0
-WLR_NO_HARDWARE_CURSORS=1
+# Omarchy Quatro Pi 5 VideoCore VII Environment (sway-compatible)
 MESA_LOADER_DRIVER_OVERRIDE=v3d
 LIBGL_ALWAYS_SOFTWARE=0
 WLR_RENDERER=gles2
@@ -316,10 +231,6 @@ EOF
 
 mkdir -p "${TARGET_ROOT}/usr/share/uwsm/env.d"
 cat <<'EOF' > "${TARGET_ROOT}/usr/share/uwsm/env.d/15-pi5-gpu"
-export WLR_DRM_NO_MODIFIERS=0
-export AQ_NO_MODIFIERS=0
-export AQ_DRM_DEVICES=/dev/dri/card0
-export WLR_NO_HARDWARE_CURSORS=1
 export MESA_LOADER_DRIVER_OVERRIDE=v3d
 export LIBGL_ALWAYS_SOFTWARE=0
 export WLR_RENDERER=gles2
@@ -330,20 +241,17 @@ export ELECTRON_OZONE_PLATFORM_HINT=wayland
 EOF
 
 cat <<'EOF' > "${TARGET_ROOT}/etc/profile.d/10-pi5-gpu.sh"
-# Raspberry Pi 5 GPU environment
-export WLR_DRM_NO_MODIFIERS=0
-export AQ_NO_MODIFIERS=0
-export AQ_DRM_DEVICES=/dev/dri/card0
-export WLR_NO_HARDWARE_CURSORS=1
+# Raspberry Pi 5 GPU environment (sway-compatible subset)
 export MESA_LOADER_DRIVER_OVERRIDE=v3d
 export LIBGL_ALWAYS_SOFTWARE=0
+export WLR_RENDERER=gles2
 EOF
 chmod 0644 "${TARGET_ROOT}/etc/profile.d/10-pi5-gpu.sh"
 
 # ------------------------------------------------------------------------------
 # 6. SDDM Autologin, Session, and Theme Configuration
 # ------------------------------------------------------------------------------
-echo "[+] Configuring SDDM (theme: omarchy, session: hyprland, autologin: omarchy)..."
+echo "[+] Configuring SDDM (theme: omarchy, session: sway, autologin: omarchy)..."
 mkdir -p "${TARGET_ROOT}/etc/sddm.conf.d"
 mkdir -p "${TARGET_ROOT}/usr/share/sddm/themes"
 
@@ -353,11 +261,6 @@ if [[ -d "${OMARCHY_INSTALL_DIR}/default/sddm/omarchy" ]]; then
     cp -a "${OMARCHY_INSTALL_DIR}/default/sddm/omarchy/." "${TARGET_ROOT}/usr/share/sddm/themes/omarchy/"
 fi
 
-# Install SDDM Hyprland greeter compositor config
-if [[ -f "${OMARCHY_INSTALL_DIR}/default/sddm/hyprland.lua" ]]; then
-    cp "${OMARCHY_INSTALL_DIR}/default/sddm/hyprland.lua" "${TARGET_ROOT}/usr/share/sddm/hyprland.lua"
-fi
-
 # SDDM Wayland & Compositor Drop-in
 cat <<'EOF' > "${TARGET_ROOT}/etc/sddm.conf.d/10-wayland.conf"
 [General]
@@ -365,7 +268,6 @@ DisplayServer=wayland
 GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell
 
 [Wayland]
-CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.lua
 SessionDir=/usr/share/wayland-sessions:/usr/local/share/wayland-sessions
 EOF
 
@@ -380,13 +282,15 @@ EOF
 cat <<'EOF' > "${TARGET_ROOT}/etc/sddm.conf.d/20-autologin.conf"
 [Autologin]
 User=omarchy
-Session=hyprland
+Session=sway
 Relogin=false
 EOF
 
-# Ensure standard Hyprland wayland-session exists
+# Ensure Hyprland wayland-session exists ONLY if the binary is installed.
+# Hyprland is not in packages.list (unbuildable on ALARM as of v1.0.2 — see CHANGELOG).
+# Re-enable with: sudo pacman -S hyprland aquamarine
 mkdir -p "${TARGET_ROOT}/usr/share/wayland-sessions"
-if [[ ! -f "${TARGET_ROOT}/usr/share/wayland-sessions/hyprland.desktop" ]]; then
+if [[ -x "${TARGET_ROOT}/usr/bin/Hyprland" && ! -f "${TARGET_ROOT}/usr/share/wayland-sessions/hyprland.desktop" ]]; then
     cat <<'EOF' > "${TARGET_ROOT}/usr/share/wayland-sessions/hyprland.desktop"
 [Desktop Entry]
 Name=Hyprland

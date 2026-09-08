@@ -3,6 +3,13 @@
 # Omarchy Quatro Pi 5 - Master Desktop Provisioning Orchestrator
 # Target: Raspberry Pi 5 (Arch Linux ARM)
 # ==============================================================================
+# NOTE: This script is NOT called by build_pi5_image.sh. The build orchestrates
+# provisioning inline (chroot + clone_omarchy_repo.sh + services). This file is
+# kept for the standalone path: chroot into an existing ALARM rootfs and run
+# this script to layer the Omarchy Quatro desktop on top.
+#
+# For the build path, see build_pi5_image.sh step 7.
+# ----------------------------------------------------------------------
 # Automates the entire desktop provisioning flow:
 # 1. Installs desktop & media packages from packages.list via pacman
 # 2. Configures 'omarchy' user, groups, and sudoers via setup_omarchy_user.sh
@@ -93,5 +100,5 @@ done
 
 echo "======================================================================"
 echo "[✓] Omarchy Quatro Pi 5 desktop provisioning finished successfully!"
-echo "    Reboot to start the Omarchy Hyprland desktop environment."
+echo "    Reboot to start the Omarchy Quatro sway desktop environment."
 echo "======================================================================"

@@ -2,7 +2,26 @@
 
 All notable changes to Omarchy Quatro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
-## [Unreleased]
+## [Unreleased] — 2026-09-08
+
+### Fixed (audit pass)
+
+- **CRITICAL**: SDDM autologin now uses `Session=sway` instead of pointing at the uninstallable Hyprland binary. Image is strictly sway-compatible at first boot.
+- **CRITICAL**: Removed Hyprland-only env vars (`AQ_DRM_DEVICES`, `AQ_NO_MODIFIERS`, `WLR_NO_HARDWARE_CURSORS`), the Hyprland `cursor{}` / `misc{}` blocks, `~/.config/hypr/pi5.conf`, `~/.config/hypr/pi5.lua`, the `start-hyprland` shim, and the unconditional `hyprland.desktop` placeholder. Hyprland re-enable: install with `pacman -S hyprland aquamarine` and a `hyprland.desktop` is written only when `/usr/bin/Hyprland` is executable.
+- **HIGH**: Omarchy clone honours `OMARCHY_REPO_URL`, `OMARCHY_BRANCH` (default `master`), and `OMARCHY_PIN_SHA` env vars for reproducible builds. Default branch moved from non-main `quattro` to `master`.
+- **HIGH**: Kernel install fails the build loudly if `/boot/kernel8.img` is missing or smaller than 1 MiB.
+- **HIGH**: `pacman -R` on `linux-aarch64` / `uboot-raspberrypi` only runs if installed; genuine pacman errors propagate instead of being `|| true` masked.
+- **HIGH**: Verifier now asserts presence of `bcm2712-rpi-5-b.dtb`, `start4.elf`, `fixup4.dat`, `bootcode4.bin`, `initramfs-linux.img`, and that `config.txt` survived linux-rpi-16k package re-injection. Verifier also grep-asserts `dtoverlay=vc4-kms-v3d` and `pciex1_gen=3` are present in `config.txt`, and that `cmdline.txt` does not request the missing plymouth splash.
+- **HIGH**: `argononed.py` power-button pulse thresholds corrected to Argon protocol (10–50 ms reboot, 2500–3500 ms shutdown) with 5-second post-event hysteresis.
+- **HIGH**: `argon/install_argon.sh` is now distro-aware (apt / pacman / dnf / pip-fallback).
+- **MEDIUM**: Resize robustness — `parted -s` replaces the interactive-prompt fallback; sfdisk remains primary; sfdisk flag rationale documented inline.
+- **MEDIUM**: `vm.dirty_background_bytes=200M` set explicitly so both 4 GB and 8 GB Pi 5 SKUs get the same writeback target; `apply_tuning.sh` warns on out-of-range RAM.
+- **MEDIUM**: `/boot` mount uses `flush,noatime` for power-cut safety on vfat.
+- **MEDIUM**: `cmdline.txt` no longer requests `splash` (plymouth is not installed).
+- **MEDIUM**: README corrected to reflect sway-not-Hyprland reality; badges, "Why" table, "What's inside", and FAQ updated.
+- **MEDIUM**: `pi-imager-os-list.json` icon URL corrected to point at this repo's `master` branch (was pointing at `omarchy-termux`).
+- **MEDIUM**: Dockerfile, CI shellcheck, and hadolint hardened (reproducibility comments, severity bump, new hadolint step).
+- **MEDIUM**: New `## Security` section in README documenting default-credentials hardening steps.
 
 ### Changed
 
@@ -12,6 +31,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioni
   non-`PARTUUID=` form, instead of silently comparing against an empty string.
 - `hyprpicker` annotated as compositor-agnostic (wlr-layer-shell, works under
   sway).
+
+[Unreleased]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.2...HEAD
 
 ## [1.0.2] — 2026-09-08
 
