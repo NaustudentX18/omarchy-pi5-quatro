@@ -1105,8 +1105,8 @@ if [ ! -L "${MNT_DIR}/etc/systemd/system/multi-user.target.wants/avahi-daemon.se
     log_error "avahi-daemon.service not enabled (missing multi-user.target.wants symlink)"
     VERIFY_FAILURE=1
 fi
-grep -q 'mdns4_minimal' "${MNT_DIR}/etc/nsswitch.conf" 2>/dev/null || {
-    log_error "nsswitch.conf missing mdns4_minimal (nss-mdns not wired)"
+grep -E -q 'mdns(4)?_minimal' "${MNT_DIR}/etc/nsswitch.conf" 2>/dev/null || {
+    log_error "nsswitch.conf missing mdns_minimal/mdns4_minimal (nss-mdns not wired)"
     VERIFY_FAILURE=1
 }
 
