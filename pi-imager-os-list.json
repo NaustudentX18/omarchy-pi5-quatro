@@ -1,8 +1,8 @@
 {
   "os_list": [
     {
-      "name": "Omarchy Quatro v1.0.5 - Arch Linux ARM (Pi 5 NVMe)",
-      "description": "Like-for-like Omarchy v4 parity on Raspberry Pi 5. Features Hyprland 0.56.2 on Wayland with Aquamarine & Quickshell, Walker + Elephant launcher, Tokyo Night theme, 16k page-size kernel, PCIe Gen 3 NVMe tuning, Argon active cooling daemon, ZRAM swap, Avahi mDNS, Chromium + Alacritty, and AI CLI tools (omp, claude-code, codex).",
+      "name": "Omarchy Quatro v1.0.6 - Arch Linux ARM (Pi 5 NVMe)",
+      "description": "100% like-for-like Omarchy v4 parity on Raspberry Pi 5. Features Hyprland 0.56.2 on Wayland with Aquamarine & Quickshell, Walker + Elephant launcher, Tokyo Night theme, 16k kernel, PCIe Gen 3 NVMe tuning, Argon active cooling, Flatpak layer (Obsidian, Pinta), Spotify webapp, and complete AI suite (omp, claude, codex, copilot, cursor, openclaw, herdr, voxtype, chatgpt, perplexity, vscode).",
       "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/omarchy-icon.png",
       "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
       "extract_size": 25769803776,
@@ -18,8 +18,8 @@
       "website": "https://github.com/NaustudentX18/omarchy-pi5-quatro",
       "subitems": [
         {
-          "name": "Omarchy Quatro v1.0.5 (Zstandard — Hyprland + Omarchy v4 Parity)",
-          "description": "Boots straight to Hyprland 0.56.2 desktop with Walker launcher, Tokyo Night theme, btop, Chromium, and full Omarchy v4 CLI suite.",
+          "name": "Omarchy Quatro v1.0.6 (Zstandard — Hyprland + Full AI Suite)",
+          "description": "Boots straight to Hyprland 0.56.2 desktop with Walker launcher, Tokyo Night theme, btop, Chromium, and complete Omarchy v4 AI suite.",
           "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/omarchy-icon.png",
           "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
           "extract_size": 25769803776,

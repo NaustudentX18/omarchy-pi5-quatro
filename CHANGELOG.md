@@ -2,6 +2,36 @@
 
 All notable changes to Omarchy Quatro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
+
+## [1.0.6] — 2026-09-09
+
+### Added — 100% Like-for-Like AI & Desktop Parity Release
+
+- **Binary Un-shadowing (446 Commands Active)**: Resolved binary collision where legacy `/usr/local/bin/omarchy*` symlinks and `/etc/omarchy.conf` shadowed the official package binaries with stale 3.8.5 scripts. Deleted obsolete symlinks and config; full 429+ packaged v4.0.2 commands are now directly accessible via `/usr/bin/` (unblocking `omarchy agent`, `omarchy agent prompt`, `omarchy agent crash`, `omarchy agent usage update`, etc.).
+- **Upstream AI Desktop Applications**:
+  - `openai-codex-desktop` (ChatGPT / Codex desktop app) installed.
+  - `perplexity` (Desktop client for Perplexity AI) installed.
+  - `visual-studio-code-bin` (VS Code arm64) installed.
+  - `typora` (Typora Markdown Editor) installed.
+  - Overwrite rules added for `/usr/share/applications/*` to cleanly resolve desktop file conflicts during package transactions.
+- **Parity CLI & System Utilities**:
+  - Un-skipped and installed `usage` (5.1.0-1-aarch64) from ALARM extra.
+  - Installed `imv` (Wayland image viewer) and `hyprland-preview-share-picker`.
+- **Flatpak Layer & Productivity Apps**:
+  - Installed `flatpak` and registered the Flathub remote.
+  - Installed `md.obsidian.Obsidian` (v1.13.7) and `com.github.PintaProject.Pinta` (v3.1.2) for full upstream feature parity.
+- **Spotify Parity Launcher**:
+  - Created `Spotify.desktop` webapp launcher with dedicated hi-res icon, matching Omarchy's official webapp pattern (ChatGPT, Discord, YouTube) to bridge the absence of a native Linux ARM64 Spotify binary.
+- **Tailscale Remote GPU Acceleration**:
+  - Configured `OLLAMA_HOST=http://100.127.91.97:11434` in `/etc/environment` for seamless access to the remote RTX 4070 Ti Ollama server (29 models) over Tailscale.
+- **Headless Display & Usability Hardening**:
+  - Added headless monitor fallback safeguard to `/usr/bin/omarchy-hyprland-monitor-watch` to ensure Hyprland initializes a virtual display when booting without an HDMI display.
+  - Configured Walker terminal runner to `alacritty -e`.
+  - Added `Super + D` keybinding for direct Walker app launcher in Hyprland.
+  - Disabled crashing `bt-agent.service`.
+
+[1.0.6]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.5...v1.0.6
+
 ## [1.0.5] — 2026-09-08
 
 ### Added — like-for-like Omarchy v4 parity

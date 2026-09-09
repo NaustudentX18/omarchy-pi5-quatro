@@ -511,7 +511,7 @@ fi
 # repo extras are pinned here (omarchy-repo aarch64 pkgs that base.list
 # references). Per-package fallback so one bad name can never kill the build.
 echo "[+] Installing upstream Omarchy parity set..."
-OMARCHY_REPO_PKGS="omarchy-keyring omarchy-zsh omarchy-nvim omacalc omacut omawrite ttfx tobi-try tensaku herdr aether asdcontrol cliamp mise-bin walker elephant-all quickshell-git xdg-terminal-exec yaru-icon-theme yaru-gtk-theme ttf-ia-writer ttf-jetbrains-mono-nerd-basic tzupdate ufw-docker localsend hyprland-preview-share-picker claude-code crush-bin openai-codex-bin github-copilot-cli cursor-cli voxtype-bin omarchy-walker omarchy-settings omarchy-audio-tuner omasnap omatrack omazed strata schist-bin once-bin dbxcli-bin bun-bin openclaw nautilus-open-any-terminal wayfreeze sunshine retroarch retroarch-joypad-autoconfig-git libretro-cap32-git libretro-database-git libretro-fbneo-git libretro-vice-x128-git libretro-vice-x64-git libretro-vice-x64dtv-git libretro-vice-x64sc-git libretro-vice-xcbm2-git libretro-vice-xcbm5x0-git libretro-vice-xpet-git libretro-vice-xplus4-git libretro-vice-xscpu64-git libretro-vice-xvic-git"
+OMARCHY_REPO_PKGS="omarchy-keyring omarchy-zsh omarchy-nvim omacalc omacut omawrite ttfx tobi-try tensaku herdr aether asdcontrol cliamp mise-bin walker elephant-all quickshell-git xdg-terminal-exec yaru-icon-theme yaru-gtk-theme ttf-ia-writer ttf-jetbrains-mono-nerd-basic tzupdate ufw-docker localsend hyprland-preview-share-picker claude-code crush-bin openai-codex-bin github-copilot-cli cursor-cli voxtype-bin omarchy-walker omarchy-settings omarchy-audio-tuner omasnap omatrack omazed strata schist-bin once-bin dbxcli-bin bun-bin openclaw nautilus-open-any-terminal wayfreeze sunshine retroarch retroarch-joypad-autoconfig-git libretro-cap32-git libretro-database-git libretro-fbneo-git libretro-vice-x128-git libretro-vice-x64-git libretro-vice-x64dtv-git libretro-vice-x64sc-git libretro-vice-xcbm2-git libretro-vice-xcbm5x0-git libretro-vice-xpet-git libretro-vice-xplus4-git libretro-vice-xscpu64-git libretro-vice-xvic-git openai-codex-desktop perplexity visual-studio-code-bin typora usage imv flatpak"
 BASE_PKGS=""
 if [ -f /opt/omarchy/install/omarchy-base.packages ]; then
     BASE_PKGS=$(grep -vE '^\s*(#|$)' /opt/omarchy/install/omarchy-base.packages)
@@ -521,7 +521,7 @@ fi
 FAILED_PKGS=""
 for p in $BASE_PKGS $OMARCHY_REPO_PKGS; do
     case "$p" in
-        usage|dotnet-runtime|dotnet-runtime-9.0|qemu-user-static-binfmt)
+        dotnet-runtime|dotnet-runtime-9.0|qemu-user-static-binfmt)
             echo "[=] skip (no aarch64 package): $p"
             FAILED_PKGS="$FAILED_PKGS $p"
             continue;;
@@ -529,7 +529,7 @@ for p in $BASE_PKGS $OMARCHY_REPO_PKGS; do
     # pipefail-safe: `|| rc=$?` keeps set -e happy; PIPESTATUS survives the
     # assignment, so rc reflects pacman itself, not tail.
     rc=0
-    pacman -S --needed --noconfirm "$p" 2>&1 | tail -2 || rc=$?
+    pacman -S --needed --noconfirm --overwrite "/usr/share/applications/*" "$p" 2>&1 | tail -2 || rc=$?
     if [ "$rc" -eq 0 ]; then
         # keep the image rootfs from filling with the package cache
         rm -f /var/cache/pacman/pkg/*.pkg.tar.zst /var/cache/pacman/pkg/*.pkg.tar.xz
@@ -828,7 +828,39 @@ WATCH_PATCH
             && chown omarchy:omarchy /home/omarchy/.local/share/omarchy/wallpaper.jpg \
             || echo "[!] wallpaper unavailable (non-fatal)"
     fi
+
+    # 5c. Flatpak layer for upstream parity (Obsidian, Pinta)
+    echo "[+] Configuring Flatpak and installing Obsidian & Pinta..."
+    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
+    flatpak install -y flathub md.obsidian.Obsidian com.github.PintaProject.Pinta || true
+
+    # 5d. Spotify WebApp launcher for full desktop parity
+    echo "[+] Installing Spotify webapp launcher..."
+    mkdir -p /home/omarchy/.local/share/applications/icons /etc/skel/.local/share/applications/icons
+    curl -fsSL https://cdn.iconscout.com/icon/free/png-512/free-spotify-icon-download-in-svg-png-gif-file-formats--logo-social-media-pack-logos-icons-226458.png -o /home/omarchy/.local/share/applications/icons/Spotify.png 2>/dev/null || true
+    cp /home/omarchy/.local/share/applications/icons/Spotify.png /etc/skel/.local/share/applications/icons/ 2>/dev/null || true
+    cat << 'SPOTIFY_EOF' | tee /home/omarchy/.local/share/applications/Spotify.desktop > /etc/skel/.local/share/applications/Spotify.desktop
+[Desktop Entry]
+Version=1.0
+Name=Spotify
+Comment=Spotify Music Streaming
+Exec=omarchy-launch-webapp https://open.spotify.com/
+Terminal=false
+Type=Application
+Icon=/home/omarchy/.local/share/applications/icons/Spotify.png
+StartupNotify=true
+Categories=AudioVideo;Audio;Player;Music;
+SPOTIFY_EOF
+    chmod +x /home/omarchy/.local/share/applications/Spotify.desktop /etc/skel/.local/share/applications/Spotify.desktop
+    chown -R omarchy:omarchy /home/omarchy/.local/share/applications 2>/dev/null || true
+
+    # 5e. Clean up any stale binary shadowing and enforce OMARCHY_PATH
+    rm -f /etc/omarchy.conf
+    find /usr/local/bin -type l -name 'omarchy*' -delete 2>/dev/null || true
 fi
+
+# 5f. Wire Tailscale remote Ollama server into /etc/environment
+grep -q "OLLAMA_HOST" /etc/environment 2>/dev/null || echo "OLLAMA_HOST=http://100.127.91.97:11434" >> /etc/environment
 
 # Set default hostname
 echo "omarchy-pi5" > /etc/hostname

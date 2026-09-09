@@ -57,9 +57,11 @@ echo "    Resolved Omarchy commit: ${RESOLVED_SHA}"
 # Ensure proper permissions across /opt/omarchy
 chmod -R a+rX "${OMARCHY_INSTALL_DIR}"
 
-# Ensure /usr/share/omarchy symlink points to /opt/omarchy for compatibility
-mkdir -p "${TARGET_ROOT}/usr/share"
-ln -snf /opt/omarchy "${TARGET_ROOT}/usr/share/omarchy"
+# Ensure /usr/share/omarchy points to /opt/omarchy only if not already provided as a directory by the package
+if [[ ! -d "${TARGET_ROOT}/usr/share/omarchy" || -L "${TARGET_ROOT}/usr/share/omarchy" ]]; then
+    mkdir -p "${TARGET_ROOT}/usr/share"
+    ln -snf /opt/omarchy "${TARGET_ROOT}/usr/share/omarchy"
+fi
 
 # Set system Omarchy configuration
 cat <<'EOF' > "${TARGET_ROOT}/etc/omarchy.conf"
@@ -77,7 +79,7 @@ cat <<'EOF' > "${TARGET_ROOT}/etc/profile.d/omarchy.sh"
 if [ -f /etc/omarchy.conf ]; then
     . /etc/omarchy.conf
 else
-    export OMARCHY_PATH=/opt/omarchy
+    export OMARCHY_PATH=/usr/share/omarchy
 fi
 if [ -d "${OMARCHY_PATH}/bin" ]; then
     case ":${PATH}:" in
@@ -89,12 +91,11 @@ EOF
 chmod 0644 "${TARGET_ROOT}/etc/profile.d/omarchy.sh"
 
 # ------------------------------------------------------------------------------
-# 2. Link Omarchy binaries in /opt/omarchy/bin/ to /usr/local/bin/
+# 2. Link Omarchy binaries in /opt/omarchy/bin/ to /usr/local/bin/ (fallback only)
 # ------------------------------------------------------------------------------
-echo "[+] Linking Omarchy binaries to /usr/local/bin..."
-mkdir -p "${TARGET_ROOT}/usr/local/bin"
-
-if [[ -d "${OMARCHY_INSTALL_DIR}/bin" ]]; then
+if [[ ! -x "${TARGET_ROOT}/usr/bin/omarchy" && -d "${OMARCHY_INSTALL_DIR}/bin" ]]; then
+    echo "[+] Linking Omarchy binaries to /usr/local/bin (fallback mode)..."
+    mkdir -p "${TARGET_ROOT}/usr/local/bin"
     chmod +x "${OMARCHY_INSTALL_DIR}/bin"/* 2>/dev/null || true
     for bin_path in "${OMARCHY_INSTALL_DIR}/bin"/*; do
         if [[ -f "${bin_path}" && -x "${bin_path}" ]]; then
@@ -103,6 +104,8 @@ if [[ -d "${OMARCHY_INSTALL_DIR}/bin" ]]; then
         fi
     done
     echo "    Linked $(find "${OMARCHY_INSTALL_DIR}/bin" -mindepth 1 -maxdepth 1 | wc -l) Omarchy binaries."
+else
+    echo "[+] Packaged /usr/bin/omarchy is present — skipping /usr/local/bin symlinks to prevent binary shadowing."
 fi
 
 # NOTE: No compositor shim is installed here. Sway ships its own
