@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # apply_tuning.sh - Install & Apply 8GB RAM + ZRAM Tuning for Pi 5
-# Omarchy Quatro Pi 5 Agent Swarm
+# Omarchy Quattro Pi 5 Agent Swarm
 # ==============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=================================================================="
-echo " Omarchy Quatro Pi 5: Applying 8GB RAM & NVMe System Tuning"
+echo " Omarchy Quattro Pi 5: Applying 8GB RAM & NVMe System Tuning"
 echo "=================================================================="
 
 if [ "$(id -u)" -ne 0 ]; then

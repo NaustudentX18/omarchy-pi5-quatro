@@ -3,8 +3,8 @@
     {
       "name": "Omarchy Quattro v1.0.6 - Arch Linux ARM (Pi 5 NVMe)",
       "description": "100% like-for-like Omarchy v4 parity on Raspberry Pi 5. Features Hyprland 0.56.2 on Wayland with Aquamarine & Quickshell, Walker + Elephant launcher, Tokyo Night theme, 16k kernel, PCIe Gen 3 NVMe tuning, Argon active cooling, Flatpak layer (Obsidian, Pinta), Spotify webapp, and complete AI suite (omp, claude, codex, copilot, cursor, openclaw, herdr, voxtype, chatgpt, perplexity, vscode).",
-      "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/omarchy-icon.png",
-      "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
+      "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/assets/omarchy-icon.png",
+      "url": "https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/latest/download/omarchy-pi5-quattro.img.zst",
       "extract_size": 25769803776,
       "image_download_size": 4845984980,
       "sha256": "4249da236d567df3970805fcce87885ae0feb2bafed9d168e9030b65453470df",
@@ -15,13 +15,13 @@
         "rpi5-64bit"
       ],
       "architecture": "aarch64",
-      "website": "https://github.com/NaustudentX18/omarchy-pi5-quatro",
+      "website": "https://github.com/NaustudentX18/omarchy-pi5-quattro",
       "subitems": [
         {
           "name": "Omarchy Quattro v1.0.6 (Zstandard — Hyprland + Full AI Suite)",
           "description": "Boots straight to Hyprland 0.56.2 desktop with Walker launcher, Tokyo Night theme, btop, Chromium, and complete Omarchy v4 AI suite.",
-          "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/omarchy-icon.png",
-          "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
+          "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/assets/omarchy-icon.png",
+          "url": "https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/latest/download/omarchy-pi5-quattro.img.zst",
           "extract_size": 25769803776,
           "image_download_size": 4845984980,
           "sha256": "4249da236d567df3970805fcce87885ae0feb2bafed9d168e9030b65453470df",

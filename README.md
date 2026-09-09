@@ -10,11 +10,11 @@
 
 **A lightning-fast, keyboard-first, AI-native Wayland desktop built natively on Arch Linux ARM.**
 
-[![Release](https://img.shields.io/badge/release-v1.0.6-7aa2f7?style=for-the-badge&logo=github)](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases)
+[![Release](https://img.shields.io/badge/release-v1.0.6-7aa2f7?style=for-the-badge&logo=github)](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases)
 [![Target](https://img.shields.io/badge/target-Raspberry%20Pi%205%20(BCM2712)-C51A4A?style=for-the-badge&logo=raspberrypi)](https://www.raspberrypi.com/products/raspberry-pi-5/)
 [![Compositor](https://img.shields.io/badge/compositor-Hyprland%200.56.2-00C8FF?style=for-the-badge)](https://hyprland.org)
 [![Kernel](https://img.shields.io/badge/kernel-16K%20Pages%20(linux--rpi--16k)-1793D1?style=for-the-badge&logo=archlinux)](https://archlinuxarm.org)
-[![Storage](https://img.shields.io/badge/storage-NVMe%20PCIe%20Gen%203-00DF89?style=for-the-badge)](https://github.com/NaustudentX18/omarchy-pi5-quatro)
+[![Storage](https://img.shields.io/badge/storage-NVMe%20PCIe%20Gen%203-00DF89?style=for-the-badge)](https://github.com/NaustudentX18/omarchy-pi5-quattro)
 
 <p align="center">
   <b>Love Omarchy's modern Linux workflow but only have a Raspberry Pi 5?</b><br>
@@ -24,7 +24,7 @@
 <p align="center">
   <a href="#-quick-start--flash-and-go">🚀 Quick Start</a> •
   <a href="#-visual-showcase">📸 Screenshots</a> •
-  <a href="#-why-omarchy-quatro">💡 Highlights</a> •
+  <a href="#-why-omarchy-quattro">💡 Highlights</a> •
   <a href="#-keybindings-cheat-sheet">⌨️ Keybindings</a> •
   <a href="#-hardware-tuning">⚡ Hardware</a> •
   <a href="#-faq--troubleshooting">❓ FAQ</a>
@@ -76,11 +76,11 @@ Official [Omarchy](https://github.com/omacom/omarchy) ships exclusively for x86_
 <img src="assets/install-flow.png" alt="Four step install flow" width="100%">
 
 ### 1. Download the Image
-Grab the latest release archive from [GitHub Releases](https://github.com/NaustudentX18/omarchy-pi5-quatro/releases):
+Grab the latest release archive from [GitHub Releases](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases):
 
 ```bash
 # If downloaded in split parts (.00, .01, .02, .03), join them:
-cat omarchy-pi5-quatro.img.zst.0* > omarchy-pi5-quatro.img.zst
+cat omarchy-pi5-quattro.img.zst.0* > omarchy-pi5-quattro.img.zst
 
 # Verify SHA256 integrity:
 sha256sum -c SHA256SUMS
@@ -88,7 +88,7 @@ sha256sum -c SHA256SUMS
 
 ### 2. Flash to NVMe or SD Card
 * Open **Raspberry Pi Imager**.
-* Select **Choose OS** → **Use custom** → select `omarchy-pi5-quatro.img.zst` *(Imager decompresses `.zst` automatically!)*.
+* Select **Choose OS** → **Use custom** → select `omarchy-pi5-quattro.img.zst` *(Imager decompresses `.zst` automatically!)*.
 * Choose your NVMe SSD (or microSD card) and click **Write**.
 
 ### 3. First Boot
@@ -201,7 +201,7 @@ Already running an earlier version of Omarchy Quattro? Bring your system up to f
 
 ```bash
 # Download and execute the official in-place update script:
-curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/updates/v1.0.6-update.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.6-update.sh | sudo bash
 ```
 
 ---
@@ -243,7 +243,7 @@ omarchy-theme-set tokyo-night
 * **Omarchy**: Created by [DHH](https://github.com/dhh) and [37signals / Basecamp](https://github.com/omacom/omarchy).
 * **Arch Linux ARM**: Maintained by the dedicated [ALARM team](https://archlinuxarm.org).
 * **Hyprland**: Created by [Vaxry](https://github.com/vaxerski) and the Hyprland community.
-* **Omarchy Quattro**: Maintained by [NaustudentX18](https://github.com/NaustudentX18/omarchy-pi5-quatro).
+* **Omarchy Quattro**: Maintained by [NaustudentX18](https://github.com/NaustudentX18/omarchy-pi5-quattro).
 
 > ⚠️ **Disclaimer**: Omarchy Quattro is an independent community port and is not officially affiliated with, endorsed by, or supported by 37signals, DHH, or the official Omarchy project.
 

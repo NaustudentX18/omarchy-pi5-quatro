@@ -29,7 +29,7 @@ CACHE_DIR="${SCRIPT_DIR}/cache"
 OUTPUT_DIR="${SCRIPT_DIR}/output"
 MNT_DIR="${WORK_DIR}/mnt"
 
-IMAGE_BASE="omarchy-pi5-quatro"
+IMAGE_BASE="omarchy-pi5-quattro"
 IMAGE_FILE="${WORK_DIR}/${IMAGE_BASE}.img"
 IMAGE_SIZE="24G"
 
@@ -258,7 +258,7 @@ log_info "Injecting Raspberry Pi 5 config.txt..."
 CONFIG_TXT="${WORK_DIR}/omarchy-config.txt"
 cat << 'EOF' > "${CONFIG_TXT}"
 # ==============================================================================
-# Omarchy Quatro - Raspberry Pi 5 Bootloader Configuration
+# Omarchy Quattro - Raspberry Pi 5 Bootloader Configuration
 # Optimized for Broadcom BCM2712 Cortex-A76 & PCIe Gen 3 NVMe SSDs
 # ==============================================================================
 
@@ -366,7 +366,7 @@ log_info()    { echo "[INFO] $*"; }
 log_warn()    { echo "[WARN] $*"; }
 
 echo "======================================================================"
-echo "[+] Starting In-Chroot Provisioning for Omarchy Quatro Pi 5..."
+echo "[+] Starting In-Chroot Provisioning for Omarchy Quattro Pi 5..."
 echo "======================================================================"
 
 # 1. Pacman Key Initialization
@@ -574,7 +574,7 @@ if id omarchy >/dev/null 2>&1; then
     mkdir -p /home/omarchy/.config/sway /home/omarchy/.local/share/omarchy
     cat << 'SWAYCFG_EOF' > /home/omarchy/.config/sway/config
 # ==============================================================================
-# Omarchy Quatro - Sway Session Configuration
+# Omarchy Quattro - Sway Session Configuration
 # ==============================================================================
 
 # Modifiers
@@ -1193,7 +1193,7 @@ fi
 
 echo ""
 echo "======================================================================"
-echo -e "${GREEN}${BOLD}OMARCHY QUATRO PI 5 IMAGE BUILD COMPLETE!${NC}"
+echo -e "${GREEN}${BOLD}OMARCHY QUATTRO PI 5 IMAGE BUILD COMPLETE!${NC}"
 echo "Output Directory: ${OUTPUT_DIR}"
 ls -lh "${OUTPUT_DIR}"
 echo "======================================================================"

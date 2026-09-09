@@ -8,10 +8,10 @@ This directory contains the provisioning scripts and package manifests for deplo
 
 | File | Purpose |
 |------|---------|
-| [`packages.list`](file:///home/pi/projects/omarchy-pi5-quatro/desktop/packages.list) | Comprehensive Arch Linux ARM package manifest covering Display, Compositor, VideoCore VII GPU, PipeWire Audio, Networking, Bluetooth, Shell tools, and Fonts. |
-| [`setup_omarchy_user.sh`](file:///home/pi/projects/omarchy-pi5-quatro/desktop/setup_omarchy_user.sh) | User creation script: provisions user `omarchy` (password `omarchy`) in groups `wheel, video, audio, input, storage, seat`, configures passwordless sudo in `/etc/sudoers.d/10-omarchy`, and enforces home permissions. |
-| [`clone_omarchy_repo.sh`](file:///home/pi/projects/omarchy-pi5-quatro/desktop/clone_omarchy_repo.sh) | Clones `omarchy` repo (branch `quattro`) to `/opt/omarchy`, links 450+ binaries to `/usr/local/bin`, seeds dotfiles/themes (Tokyo Night default) to `/home/omarchy` and `/etc/skel`, injects Pi 5 VideoCore VII Hyprland environment parameters, and configures SDDM autologin. |
-| [`install_desktop.sh`](file:///home/pi/projects/omarchy-pi5-quatro/desktop/install_desktop.sh) | Master orchestrator script that runs package installation, user provisioning, repository integration, and systemd service enablement. |
+| [`packages.list`](file:///home/pi/projects/omarchy-pi5-quattro/desktop/packages.list) | Comprehensive Arch Linux ARM package manifest covering Display, Compositor, VideoCore VII GPU, PipeWire Audio, Networking, Bluetooth, Shell tools, and Fonts. |
+| [`setup_omarchy_user.sh`](file:///home/pi/projects/omarchy-pi5-quattro/desktop/setup_omarchy_user.sh) | User creation script: provisions user `omarchy` (password `omarchy`) in groups `wheel, video, audio, input, storage, seat`, configures passwordless sudo in `/etc/sudoers.d/10-omarchy`, and enforces home permissions. |
+| [`clone_omarchy_repo.sh`](file:///home/pi/projects/omarchy-pi5-quattro/desktop/clone_omarchy_repo.sh) | Clones `omarchy` repo (branch `quattro`) to `/opt/omarchy`, links 450+ binaries to `/usr/local/bin`, seeds dotfiles/themes (Tokyo Night default) to `/home/omarchy` and `/etc/skel`, injects Pi 5 VideoCore VII Hyprland environment parameters, and configures SDDM autologin. |
+| [`install_desktop.sh`](file:///home/pi/projects/omarchy-pi5-quattro/desktop/install_desktop.sh) | Master orchestrator script that runs package installation, user provisioning, repository integration, and systemd service enablement. |
 
 ---
 

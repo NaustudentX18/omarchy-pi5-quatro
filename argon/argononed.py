@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 argononed.py - Argon ONE V3 / NEO 5 Fan and Power Button Daemon
-Omarchy Quatro Pi 5 Agent Swarm
+Omarchy Quattro Pi 5 Agent Swarm
 
 Features:
 - Communicates with Argon MCU over I2C at address 0x1a (using smbus2 / smbus).

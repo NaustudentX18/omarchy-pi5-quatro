@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro v1.0.4 in-place update
+# Omarchy Quattro v1.0.4 in-place update
 #
 # Applies ONLY the v1.0.4 deltas to an existing v1.0.x install — no reflash,
 # no NVMe extraction. Safe to re-run (idempotent).
@@ -33,11 +33,11 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 if ! command -v pacman &>/dev/null; then
-    echo "[!] This script targets Arch Linux ARM (Omarchy Quatro). pacman not found." >&2
+    echo "[!] This script targets Arch Linux ARM (Omarchy Quattro). pacman not found." >&2
     exit 1
 fi
 
-echo "[*] Omarchy Quatro v1.0.4 update — zram swap + avahi mDNS"
+echo "[*] Omarchy Quattro v1.0.4 update — zram swap + avahi mDNS"
 echo "-----------------------------------------------------------"
 
 # --- 1. Packages --------------------------------------------------------------
@@ -57,7 +57,7 @@ if [ ! -f "$ZRAM_CONF" ]; then
     echo "[+] Writing $ZRAM_CONF (4 GB zstd swap, priority 100) ..."
     mkdir -p /etc/systemd
     cat > "$ZRAM_CONF" <<'EOF'
-# Omarchy Quatro Pi 5 — 4 GB compressed swap in RAM (zstd).
+# Omarchy Quattro Pi 5 — 4 GB compressed swap in RAM (zstd).
 # Spares the NVMe from swap writes; priority 100 beats any disk swap.
 [zram0]
 zram-size = 4096

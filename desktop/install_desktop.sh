@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro Pi 5 - Master Desktop Provisioning Orchestrator
+# Omarchy Quattro Pi 5 - Master Desktop Provisioning Orchestrator
 # Target: Raspberry Pi 5 (Arch Linux ARM)
 # ==============================================================================
 # NOTE: This script is NOT called by build_pi5_image.sh. The build orchestrates
 # provisioning inline (chroot + clone_omarchy_repo.sh + services). This file is
 # kept for the standalone path: chroot into an existing ALARM rootfs and run
-# this script to layer the Omarchy Quatro desktop on top.
+# this script to layer the Omarchy Quattro desktop on top.
 #
 # For the build path, see build_pi5_image.sh step 7.
 # ----------------------------------------------------------------------
@@ -33,7 +33,7 @@ for arg in "$@"; do
 done
 
 echo "======================================================================"
-echo " Omarchy Quatro Pi 5 - Desktop Provisioning"
+echo " Omarchy Quattro Pi 5 - Desktop Provisioning"
 echo " Target Root: ${TARGET_ROOT}"
 echo " Script Dir:  ${SCRIPT_DIR}"
 echo "======================================================================"
@@ -99,6 +99,6 @@ for svc in "${SERVICES[@]}"; do
 done
 
 echo "======================================================================"
-echo "[✓] Omarchy Quatro Pi 5 desktop provisioning finished successfully!"
-echo "    Reboot to start the Omarchy Quatro sway desktop environment."
+echo "[✓] Omarchy Quattro Pi 5 desktop provisioning finished successfully!"
+echo "    Reboot to start the Omarchy Quattro sway desktop environment."
 echo "======================================================================"

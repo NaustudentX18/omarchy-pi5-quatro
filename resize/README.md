@@ -1,5 +1,5 @@
 # First-Boot Root Filesystem Auto-Resize Subsystem
-**Omarchy Quatro Pi 5 Agent Swarm**
+**Omarchy Quattro Pi 5 Agent Swarm**
 
 ## Overview
 This subsystem automatically detects and expands the root partition and ext4 filesystem to occupy 100% of the underlying physical storage media (e.g. 512GB NVMe SSD, SD card, or USB drive) on first system boot.

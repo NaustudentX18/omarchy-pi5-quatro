@@ -1,5 +1,5 @@
 # Argon ONE V3 / NEO 5 Fan & Power Management Subsystem
-**Omarchy Quatro Pi 5 Agent Swarm**
+**Omarchy Quattro Pi 5 Agent Swarm**
 
 ## Overview
 This subsystem provides comprehensive hardware integration for the **Argon ONE V3** and **Argon NEO 5** cases on Raspberry Pi 5 (BCM2712).
@@ -34,8 +34,8 @@ re-triggering actions while the system is halting.
 ## Manual Testing
 ```bash
 # Test thermal read and fan curve calculation:
-python3 /home/pi/projects/omarchy-pi5-quatro/argon/argononed.py --test
+python3 /home/pi/projects/omarchy-pi5-quattro/argon/argononed.py --test
 
 # Run daemon in dry-run mode with verbose logging:
-python3 /home/pi/projects/omarchy-pi5-quatro/argon/argononed.py --dry-run -v
+python3 /home/pi/projects/omarchy-pi5-quattro/argon/argononed.py --dry-run -v
 ```

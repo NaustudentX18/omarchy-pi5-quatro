@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # rpi-resizerootfs.sh - First-Boot Root Filesystem Auto-Resize
-# Omarchy Quatro Pi 5 Agent Swarm
+# Omarchy Quattro Pi 5 Agent Swarm
 #
 # Detects root partition (/dev/nvme0n1p2, /dev/sda2, /dev/mmcblk0p2, etc.)
 # Expands partition using growpart (with parted fallback) to fill entire disk (e.g. 512GB NVMe SSD)

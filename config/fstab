@@ -1,4 +1,4 @@
-# /etc/fstab: static file system information for Omarchy Quatro Pi 5
+# /etc/fstab: static file system information for Omarchy Quattro Pi 5
 #
 # <file system>             <mount point>   <type>  <options>       <dump>  <pass>
 proc                        /proc           proc    defaults          0       0

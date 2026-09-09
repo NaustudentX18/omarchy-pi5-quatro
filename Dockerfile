@@ -1,5 +1,5 @@
 # ==============================================================================
-# Dockerfile for Omarchy Quatro Pi 5 Image Builder
+# Dockerfile for Omarchy Quattro Pi 5 Image Builder
 # Provides an isolated, reproducible rootfs packaging environment
 # ==============================================================================
 

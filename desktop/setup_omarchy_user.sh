@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro Pi 5 - User Provisioning Script
+# Omarchy Quattro Pi 5 - User Provisioning Script
 # Target: Raspberry Pi 5 (Arch Linux ARM)
 # ==============================================================================
 # Provisions the primary user 'omarchy' with sudo privileges, hardware groups,
-# and shell configurations for the Omarchy Quatro desktop environment.
+# and shell configurations for the Omarchy Quattro desktop environment.
 #
 # Usage:
 #   sudo ./setup_omarchy_user.sh [TARGET_ROOT]
@@ -42,7 +42,7 @@ run_in_target() {
     fi
 }
 
-echo "=== [Omarchy Quatro] Initializing User Provisioning ==="
+echo "=== [Omarchy Quattro] Initializing User Provisioning ==="
 echo "Target root: ${TARGET_ROOT}"
 
 # Ensure root privileges if modifying local system
@@ -110,7 +110,7 @@ SUDOERS_FILE="${TARGET_ROOT}/etc/sudoers.d/10-omarchy"
 
 cat <<'EOF' > "${SUDOERS_FILE}"
 # ==============================================================================
-# Omarchy Quatro Pi 5 - Sudoers configuration
+# Omarchy Quattro Pi 5 - Sudoers configuration
 # Allows members of the wheel group and omarchy to execute any command without password
 # ==============================================================================
 %wheel ALL=(ALL:ALL) NOPASSWD: ALL

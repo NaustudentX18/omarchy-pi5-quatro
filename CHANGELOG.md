@@ -30,7 +30,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioni
   - Added `Super + D` keybinding for direct Walker app launcher in Hyprland.
   - Disabled crashing `bt-agent.service`.
 
-[1.0.6]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.5...v1.0.6
+[1.0.6]: https://github.com/NaustudentX18/omarchy-pi5-quattro/compare/v1.0.5...v1.0.6
 
 ## [1.0.5] — 2026-09-08
 
@@ -70,7 +70,7 @@ and makes a faithful port possible. The image now:
 (nvidia/intel/t2/limine), and GUI extras upstream installs optionally
 (1password, vscode, sublime, typora, perplexity, nordvpn).
 
-[1.0.5]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.4...v1.0.5
+[1.0.5]: https://github.com/NaustudentX18/omarchy-pi5-quattro/compare/v1.0.4...v1.0.5
 
 ## [1.0.4] — 2026-09-08
 
@@ -98,7 +98,7 @@ and makes a faithful port possible. The image now:
   stays the default session. `hyprland-guiutils` and `hyprtoolkit` did
   appear in the repos; flip is now only blocked on the soname.
 
-[1.0.4]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.3...v1.0.4
+[1.0.4]: https://github.com/NaustudentX18/omarchy-pi5-quattro/compare/v1.0.3...v1.0.4
 
 ## [1.0.3] — 2026-09-08
 
@@ -133,7 +133,7 @@ and makes a faithful port possible. The image now:
 - `hyprpicker` annotated as compositor-agnostic (wlr-layer-shell, works under
   sway).
 
-[1.0.3]: https://github.com/NaustudentX18/omarchy-pi5-quatro/compare/v1.0.2...v1.0.3
+[1.0.3]: https://github.com/NaustudentX18/omarchy-pi5-quattro/compare/v1.0.2...v1.0.3
 
 ## [1.0.2] — 2026-09-08
 
@@ -171,7 +171,7 @@ with v1.0.0/v1.0.1 is fixed and covered by a build-time verification gate.
 - Baked-in sway config (Omarchy keybinds, waybar, fuzzel, mako) and the
   tokyo-night cityscape wallpaper for the `omarchy` user.
 
-[1.0.2]: https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/tag/v1.0.2
+[1.0.2]: https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.2
 ## [1.0.0] — 2026-09-07
 
 First public release. Built and verified natively on a Raspberry Pi 5 (8 GB).
@@ -204,4 +204,4 @@ First public release. Built and verified natively on a Raspberry Pi 5 (8 GB).
 - Audited and verified end-to-end: loop-mount checks for kernel, initramfs, fstab, user,
   sudoers, smbus2, growpart, and enabled services before every release
 
-[1.0.0]: https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/tag/v1.0.0
+[1.0.0]: https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.0

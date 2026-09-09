@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # install_resize.sh - Install First-Boot Auto-Resize Service
-# Omarchy Quatro Pi 5 Agent Swarm
+# Omarchy Quattro Pi 5 Agent Swarm
 # ==============================================================================
 set -euo pipefail
 
@@ -10,7 +10,7 @@ BIN_TARGET="/usr/local/bin/rpi-resizerootfs.sh"
 SERVICE_TARGET="/etc/systemd/system/rpi-resizerootfs.service"
 
 echo "=================================================================="
-echo " Omarchy Quatro Pi 5: Installing Auto-Resize Rootfs Service"
+echo " Omarchy Quattro Pi 5: Installing Auto-Resize Rootfs Service"
 echo "=================================================================="
 
 if [ "$(id -u)" -ne 0 ]; then

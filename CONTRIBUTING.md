@@ -25,12 +25,12 @@ every kind of contribution helps.
 ## Building a test image
 
 ```bash
-git clone https://github.com/NaustudentX18/omarchy-pi5-quatro.git
-cd omarchy-pi5-quatro
+git clone https://github.com/NaustudentX18/omarchy-pi5-quattro.git
+cd omarchy-pi5-quattro
 sudo ./build_pi5_image.sh --fast-compress   # ~16 min on a Pi 5
 ```
 
-Then flash `output/omarchy-pi5-quatro.img.zst` with Raspberry Pi Imager ("Use custom") and boot it.
+Then flash `output/omarchy-pi5-quattro.img.zst` with Raspberry Pi Imager ("Use custom") and boot it.
 
 ## Reporting bugs
 

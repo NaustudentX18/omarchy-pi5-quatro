@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro - Docker Container Build Runner
+# Omarchy Quattro - Docker Container Build Runner
 # Executes image build in a privileged, isolated container environment
 # ==============================================================================
 

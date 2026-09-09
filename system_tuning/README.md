@@ -1,5 +1,5 @@
 # 8GB RAM & NVMe System Tuning Subsystem
-**Omarchy Quatro Pi 5 Agent Swarm**
+**Omarchy Quattro Pi 5 Agent Swarm**
 
 ## Overview
 Optimized kernel virtual memory, paging, and I/O writeback parameters tailored for Raspberry Pi 5 (4-8 GB LPDDR4X RAM SKUs) and high-speed PCIe Gen3 NVMe SSD. `apply_tuning.sh` warns when the detected RAM falls outside the 4-16 GB range the dirty_bytes tuning is calibrated for.

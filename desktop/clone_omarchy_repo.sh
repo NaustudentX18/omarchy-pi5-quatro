@@ -114,7 +114,7 @@ fi
 # own desktop file (created if `pacman -S hyprland` lands a binary).
 
 # ------------------------------------------------------------------------------
-# 3. Seed Omarchy Quatro dotfiles, configs, and themes
+# 3. Seed Omarchy Quattro dotfiles, configs, and themes
 # ------------------------------------------------------------------------------
 echo "[+] Seeding Omarchy dotfiles and configurations..."
 
@@ -241,7 +241,7 @@ echo "[+] Configuring Pi 5 VideoCore VII GPU environment (sway-compatible)..."
 # wlroots-only and read by sway; the rest are general Wayland env.
 mkdir -p "${TARGET_ROOT}/etc/environment.d"
 cat <<'EOF' > "${TARGET_ROOT}/etc/environment.d/10-pi5-gpu.conf"
-# Omarchy Quatro Pi 5 VideoCore VII Environment (Hyprland / Aquamarine + Sway)
+# Omarchy Quattro Pi 5 VideoCore VII Environment (Hyprland / Aquamarine + Sway)
 AQ_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0
 AQ_NO_MODIFIERS=1
 MESA_LOADER_DRIVER_OVERRIDE=v3d
@@ -352,4 +352,4 @@ if id -u "${USERNAME}" >/dev/null 2>&1 && [[ -d "${USER_HOME}" ]]; then
     chmod 750 "${USER_HOME}"
 fi
 
-echo "[✓] Omarchy Quatro desktop integration completed successfully!"
+echo "[✓] Omarchy Quattro desktop integration completed successfully!"

@@ -2,7 +2,7 @@
 # ==============================================================================
 # install_argon.sh - Distro-aware installation script for Argon ONE V3 / NEO 5
 #                    daemon. Supports apt, pacman, dnf, and pip-fallback.
-# Omarchy Quatro Pi 5 Agent Swarm
+# Omarchy Quattro Pi 5 Agent Swarm
 # ==============================================================================
 set -euo pipefail
 
@@ -11,7 +11,7 @@ BIN_TARGET="/usr/local/bin/argononed.py"
 SERVICE_TARGET="/etc/systemd/system/argononed.service"
 
 echo "=================================================================="
-echo " Omarchy Quatro Pi 5: Installing Argon ONE V3 / NEO 5 Daemon"
+echo " Omarchy Quattro Pi 5: Installing Argon ONE V3 / NEO 5 Daemon"
 echo "=================================================================="
 
 # Check root privileges

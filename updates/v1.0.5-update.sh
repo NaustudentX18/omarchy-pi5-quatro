@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro v1.0.5 in-place update — LIKE-FOR-LIKE Omarchy v4 parity
+# Omarchy Quattro v1.0.5 in-place update — LIKE-FOR-LIKE Omarchy v4 parity
 #
 # Brings an existing v1.0.x install up to v1.0.5 parity without a reflash:
 #   1. Adds the [omarchy] pacman repo (pkgs.omarchy.org/edge/aarch64)
@@ -30,7 +30,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 command -v pacman &>/dev/null || { echo "[!] Arch Linux ARM only (pacman not found)" >&2; exit 1; }
 
-echo "[*] Omarchy Quatro v1.0.5 update — full Omarchy v4 parity"
+echo "[*] Omarchy Quattro v1.0.5 update — full Omarchy v4 parity"
 echo "------------------------------------------------------------"
 
 # --- 1. [omarchy] repo ---------------------------------------------------------
