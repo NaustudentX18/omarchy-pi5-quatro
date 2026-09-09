@@ -47,6 +47,7 @@ ROOTFS_TARBALL="${CACHE_DIR}/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
 # Options
 SKIP_COMPRESS=0
 FAST_COMPRESS=0
+WITH_XZ=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -58,11 +59,16 @@ while [[ $# -gt 0 ]]; do
             FAST_COMPRESS=1
             shift
             ;;
+        --with-xz)
+            WITH_XZ=1
+            shift
+            ;;
         --help|-h)
             echo "Usage: sudo $0 [OPTIONS]"
             echo "Options:"
             echo "  --skip-compress    Skip .zst and .xz compression (faster local test)"
             echo "  --fast-compress    Use fast compression levels for quick testing"
+            echo "  --with-xz          Also compress to .img.xz (slow, optional)"
             echo "  --help, -h         Show this help message"
             exit 0
             ;;
@@ -295,7 +301,7 @@ cp "${CONFIG_TXT}" "${MNT_DIR}/boot/config.txt"
 
 
 log_info "Injecting cmdline.txt with PARTUUID=${ROOT_PARTUUID}..."
-echo "root=PARTUUID=${ROOT_PARTUUID} rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory quiet" > "${MNT_DIR}/boot/cmdline.txt"
+echo "root=PARTUUID=${ROOT_PARTUUID} rw rootwait nvme_core.default_ps_max_latency=0 console=serial0,115200 console=tty1 fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory quiet" > "${MNT_DIR}/boot/cmdline.txt"
 
 if [ -f "${SCRIPT_DIR}/config/fstab" ]; then
     log_info "Injecting /etc/fstab from config/fstab template..."
@@ -926,7 +932,26 @@ elif [ -f /tmp/setup/scripts/99-pi5-tuning.conf ]; then
     cp /tmp/setup/scripts/99-pi5-tuning.conf /etc/sysctl.d/99-pi5-tuning.conf
 fi
 
-# 8b. I2C & smbus2 for Argon daemon (python-smbus2 is AUR-only; install via pip)
+# 8b. Install Pi 5 self-healing post-update reconciliation hooks
+echo "[+] Installing Pi 5 post-update reconciliation hooks..."
+if [ -f /tmp/setup/system_tuning/omarchy-pi5-post-update.sh ]; then
+    cp /tmp/setup/system_tuning/omarchy-pi5-post-update.sh /usr/local/bin/omarchy-pi5-post-update
+    chmod +x /usr/local/bin/omarchy-pi5-post-update
+fi
+if [ -f /tmp/setup/system_tuning/99-omarchy-pi5.hook ]; then
+    mkdir -p /etc/pacman.d/hooks
+    cp /tmp/setup/system_tuning/99-omarchy-pi5.hook /etc/pacman.d/hooks/99-omarchy-pi5.hook
+fi
+mkdir -p /home/omarchy/.config/omarchy/hooks/post-update.d /etc/skel/.config/omarchy/hooks/post-update.d
+cat << 'GUARD_EOF' > /home/omarchy/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh
+#!/usr/bin/env bash
+/usr/local/bin/omarchy-pi5-post-update
+GUARD_EOF
+chmod +x /home/omarchy/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh
+cp /home/omarchy/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh /etc/skel/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh
+chown -R omarchy:omarchy /home/omarchy/.config/omarchy 2>/dev/null || true
+
+# 8c. I2C & smbus2 for Argon daemon (python-smbus2 is AUR-only; install via pip)
 echo "[+] Installing smbus2 for argononed..."
 pacman -S --noconfirm --needed python-pip || echo "[!] python-pip unavailable"
 pip install --break-system-packages --quiet smbus2 || echo "[!] smbus2 install failed - fan daemon will run without I2C"
@@ -1177,13 +1202,17 @@ else
         log_warn "zstd command not found; skipping .img.zst generation."
     fi
 
-    # XZ multi-threaded compression (.img.xz)
-    if command -v xz &>/dev/null; then
-        log_info "Compressing ${IMAGE_BASE}.img to .img.xz (multi-threaded, level ${XZ_LEVEL})..."
-        xz -T0 "${XZ_LEVEL}" -k -c "${IMAGE_FILE}" > "${OUTPUT_DIR}/${IMAGE_BASE}.img.xz"
-        log_success "Created: ${OUTPUT_DIR}/${IMAGE_BASE}.img.xz ($(du -h "${OUTPUT_DIR}/${IMAGE_BASE}.img.xz" | awk '{print $1}'))"
+    # XZ multi-threaded compression (.img.xz) - optional
+    if [ "$WITH_XZ" -eq 1 ]; then
+        if command -v xz &>/dev/null; then
+            log_info "Compressing ${IMAGE_BASE}.img to .img.xz (multi-threaded, level ${XZ_LEVEL})..."
+            xz -T0 "${XZ_LEVEL}" -k -c "${IMAGE_FILE}" > "${OUTPUT_DIR}/${IMAGE_BASE}.img.xz"
+            log_success "Created: ${OUTPUT_DIR}/${IMAGE_BASE}.img.xz ($(du -h "${OUTPUT_DIR}/${IMAGE_BASE}.img.xz" | awk '{print $1}'))"
+        else
+            log_warn "xz command not found; skipping .img.xz generation."
+        fi
     else
-        log_warn "xz command not found; skipping .img.xz generation."
+        log_info "Skipping .img.xz generation (use --with-xz to enable)."
     fi
 
     log_info "Generating SHA256 checksums..."

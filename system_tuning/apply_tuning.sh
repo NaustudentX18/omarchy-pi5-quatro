@@ -55,7 +55,7 @@ fi
 
 echo "=================================================================="
 echo " System tuning successfully applied:"
-echo "   - ZRAM: 4GB swap device with zstd compression"
+echo "   - ZRAM: dynamic swap device (min(ram/2, 8GB)) with zstd compression"
 echo "   - vm.swappiness = 100"
 echo "   - vm.vfs_cache_pressure = 50"
 echo "   - vm.dirty_background_bytes = 209715200 (200MB)"

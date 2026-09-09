@@ -1,0 +1,62 @@
+name: Upstream Sync & Drift Monitor
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Run daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-upstream:
+    name: Check Omarchy upstream releases & package drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch upstream Omarchy (quattro branch) status
+        run: |
+          echo "=== Checking Upstream omacom/omarchy ==="
+          UPSTREAM_API="https://api.github.com/repos/omacom/omarchy/commits/quattro"
+          UPSTREAM_JSON=$(curl -sSL -H "Accept: application/vnd.github.v3+json" "$UPSTREAM_API")
+          UPSTREAM_SHA=$(echo "$UPSTREAM_JSON" | jq -r '.sha // empty')
+          UPSTREAM_MSG=$(echo "$UPSTREAM_JSON" | jq -r '.commit.message // empty' | head -n 1)
+          UPSTREAM_DATE=$(echo "$UPSTREAM_JSON" | jq -r '.commit.committer.date // empty')
+
+          if [ -z "$UPSTREAM_SHA" ]; then
+            echo "Error fetching upstream commit information."
+            exit 1
+          fi
+
+          echo "Upstream Quattro SHA: ${UPSTREAM_SHA}"
+          echo "Date: ${UPSTREAM_DATE}"
+          echo "Message: ${UPSTREAM_MSG}"
+
+          # Compare with our pinned or last synced SHA
+          CURRENT_PIN=$(grep -oE 'OMARCHY_PIN_SHA:-"[a-f0-9]+"' desktop/clone_omarchy_repo.sh | cut -d'"' -f2 || true)
+          echo "Current image baseline: ${CURRENT_PIN:-tracking-HEAD}"
+
+      - name: Audit upstream package list drift
+        run: |
+          echo "=== Fetching upstream omarchy-base.packages ==="
+          curl -sSL -o /tmp/upstream-base.packages https://raw.githubusercontent.com/omacom/omarchy/quattro/install/omarchy-base.packages
+
+          echo "=== Comparing with local packages.list ==="
+          UPSTREAM_PKGS=$(grep -vE '^\s*(#|$)' /tmp/upstream-base.packages | sort -u)
+          LOCAL_PKGS=$(grep -vE '^\s*(#|$)' desktop/packages.list | sort -u)
+
+          echo "--- New upstream packages not in local packages.list ---"
+          comm -23 <(echo "$UPSTREAM_PKGS") <(echo "$LOCAL_PKGS") || true
+
+          echo "--- Local packages not in upstream base packages ---"
+          comm -13 <(echo "$UPSTREAM_PKGS") <(echo "$LOCAL_PKGS") || true
+
+      - name: Verify pkgs.omarchy.org edge aarch64 availability
+        run: |
+          echo "=== Checking pkgs.omarchy.org/edge/aarch64 ==="
+          REPO_STATUS=$(curl -sIL -o /dev/null -w "%{http_code}" https://pkgs.omarchy.org/edge/aarch64/omarchy.db || echo "000")
+          echo "Omarchy edge aarch64 repo HTTP status: ${REPO_STATUS}"
+          if [ "$REPO_STATUS" != "200" ]; then
+            echo "::warning::pkgs.omarchy.org edge repo returned status $REPO_STATUS"
+          else
+            echo "Omarchy edge repository is live and healthy."
+          fi

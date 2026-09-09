@@ -1,0 +1,13 @@
+[Trigger]
+Operation = Upgrade
+Operation = Install
+Type = Package
+Target = omarchy
+Target = omarchy-*
+Target = hyprland
+Target = walker
+
+[Action]
+Description = [Omarchy Quattro] Re-applying Pi 5 hardware safeguards & configurations...
+When = PostTransaction
+Exec = /usr/local/bin/omarchy-pi5-post-update

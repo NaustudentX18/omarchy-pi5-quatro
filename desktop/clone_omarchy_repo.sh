@@ -64,23 +64,14 @@ if [[ ! -d "${TARGET_ROOT}/usr/share/omarchy" || -L "${TARGET_ROOT}/usr/share/om
 fi
 
 # Set system Omarchy configuration
-cat <<'EOF' > "${TARGET_ROOT}/etc/omarchy.conf"
-export OMARCHY_PATH=/usr/share/omarchy
-EOF
-
 mkdir -p "${TARGET_ROOT}/etc/environment.d"
 echo "OMARCHY_PATH=/usr/share/omarchy" >> "${TARGET_ROOT}/etc/environment"
 echo "OMARCHY_PATH=/usr/share/omarchy" > "${TARGET_ROOT}/etc/environment.d/10-omarchy.conf"
 
-
 mkdir -p "${TARGET_ROOT}/etc/profile.d"
 cat <<'EOF' > "${TARGET_ROOT}/etc/profile.d/omarchy.sh"
 # Omarchy Quattro system profile
-if [ -f /etc/omarchy.conf ]; then
-    . /etc/omarchy.conf
-else
-    export OMARCHY_PATH=/usr/share/omarchy
-fi
+export OMARCHY_PATH=/usr/share/omarchy
 if [ -d "${OMARCHY_PATH}/bin" ]; then
     case ":${PATH}:" in
         *:"${OMARCHY_PATH}/bin":*) ;;
