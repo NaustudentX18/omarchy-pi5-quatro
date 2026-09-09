@@ -762,6 +762,57 @@ SWAYCFG_EOF
     su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; /usr/bin/omarchy-refresh-hyprland || true"
     su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; bash /usr/share/omarchy/install/config/walker-elephant.sh || true"
 
+    # Hardening & usability fixes:
+    # 1. Configure Walker terminal so TUI apps (btop, etc.) launch inside Alacritty
+    mkdir -p /home/omarchy/.config/walker /etc/skel/.config/walker
+    if [ -f /home/omarchy/.config/walker/config.toml ]; then
+        sed -i '1s/^/terminal = "alacritty -e"\n/' /home/omarchy/.config/walker/config.toml
+    fi
+    if [ -f /etc/skel/.config/walker/config.toml ]; then
+        sed -i '1s/^/terminal = "alacritty -e"\n/' /etc/skel/.config/walker/config.toml
+    fi
+
+    # 2. Unhide btop in launcher so it is directly searchable in Walker / Apps menu
+    sed -i '/^btop$/d' /usr/share/omarchy/default/omarchy/launcher.hides 2>/dev/null || true
+    sed -i '/^btop$/d' /home/omarchy/.local/share/omarchy/default/omarchy/launcher.hides 2>/dev/null || true
+
+    # 3. Expand tilde in chromium-flags.conf so Chromium binary resolves extension
+    sed -i 's|~/.local|/home/omarchy/.local|g' /home/omarchy/.config/chromium-flags.conf /etc/skel/.config/chromium-flags.conf 2>/dev/null || true
+
+    # 4. Add Super+D binding for direct Walker app launcher in Hyprland
+    sed -i '/# Add extra bindings/a bindd = SUPER, D, Application launcher, exec, walker -p "Launch…"' /home/omarchy/.config/hypr/bindings.conf /etc/skel/.config/hypr/bindings.conf 2>/dev/null || true
+    sed -i '/-- Add a new binding/a o.bind("SUPER + D", "Application launcher", "walker -p \\\"Launch…\\\"")' /home/omarchy/.config/hypr/bindings.lua /etc/skel/.config/hypr/bindings.lua 2>/dev/null || true
+
+    # 5. Disable bt-agent.service to prevent crash loop if bluez-tools is absent
+    systemctl --user --global disable bt-agent.service 2>/dev/null || true
+
+    # 6. Headless monitor fallback safeguard so apps never hang if booted without display
+    if [ -f /usr/bin/omarchy-hyprland-monitor-watch ] && ! grep -q 'ensure_monitor()' /usr/bin/omarchy-hyprland-monitor-watch; then
+        cat << 'WATCH_PATCH' >> /usr/bin/omarchy-hyprland-monitor-watch
+
+# Pi 5 headless fallback safeguard
+ensure_monitor() {
+  local monitors
+  monitors=$(hyprctl monitors all -j 2>/dev/null)
+  if [[ "$monitors" == "[]" || -z "$monitors" ]]; then
+    hyprctl output create headless >/dev/null 2>&1
+  fi
+}
+cleanup_headless_on_physical() {
+  local monitors has_headless has_physical
+  monitors=$(hyprctl monitors all -j 2>/dev/null)
+  has_headless=$(jq 'any(.[]; .name | startswith("HEADLESS"))' <<<"$monitors" 2>/dev/null)
+  has_physical=$(jq 'any(.[]; (.name | startswith("HEADLESS") | not) and .disabled != true)' <<<"$monitors" 2>/dev/null)
+  if [[ "$has_headless" == "true" && "$has_physical" == "true" ]]; then
+    for h in $(jq -r '.[] | select(.name | startswith("HEADLESS")) | .name' <<<"$monitors"); do
+      hyprctl output remove "$h" >/dev/null 2>&1
+    done
+  fi
+}
+ensure_monitor
+WATCH_PATCH
+    fi
+
     # Pre-generate Tokyo Night theme so waybar.css and all dotfiles exist on first boot
     echo "[+] Pre-generating Tokyo Night theme for omarchy user..."
     su -s /bin/bash omarchy -c "export OMARCHY_PATH=/usr/share/omarchy; /usr/bin/omarchy-theme-set 'tokyo-night' || true"
