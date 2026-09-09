@@ -1,4 +1,4 @@
-# Contributing to Omarchy Quatro
+# Contributing to Omarchy Quattro
 
 Thanks for helping make Omarchy on the Pi 5 better! This is a young project and
 every kind of contribution helps.

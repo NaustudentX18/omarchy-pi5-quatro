@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro - Raspberry Pi 5 Master Image Builder
-# Orchestrator for pristine Arch Linux ARM aarch64 image generation
+# Omarchy Quattro - Raspberry Pi 5 Master Image Builder
+# Target: Raspberry Pi 5 (BCM2712 / VideoCore VII) - Arch Linux ARM (aarch64) image generation
 # Target Device: Raspberry Pi 5 (8GB RAM, NVMe PCIe Gen3, Argon ONE / NEO 5)
 # ==============================================================================
 
@@ -496,8 +496,8 @@ EOF_FUZZEL
 chown -R omarchy:omarchy /home/omarchy/.config/fuzzel 2>/dev/null || true
 
 
-# 5. Omarchy Quatro Clone & Desktop Integration
-echo "[+] Setting up Omarchy Quatro environment..."
+# 5. Omarchy Quattro Clone & Desktop Integration
+echo "[+] Setting up Omarchy Quattro environment..."
 if [ -f /tmp/setup/desktop/clone_omarchy_repo.sh ]; then
     echo "[+] Executing desktop/clone_omarchy_repo.sh..."
     bash /tmp/setup/desktop/clone_omarchy_repo.sh / || true

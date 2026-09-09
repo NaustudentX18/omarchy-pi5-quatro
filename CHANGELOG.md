@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Omarchy Quatro are documented here.
+All notable changes to Omarchy Quattro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
 
 ## [1.0.6] — 2026-09-09

@@ -4,9 +4,9 @@
   <img src="assets/omarchy-logo.svg" alt="Omarchy Logo" width="120" />
 </p>
 
-# Omarchy Quatro (Pi 5)
+# Omarchy Quattro (Pi 5)
 
-### Like-for-Like [Omarchy v4](https://github.com/omacom/omarchy) Desktop for Raspberry Pi 5
+### Like-for-Like [Omarchy v4 (Quattro)](https://github.com/omacom/omarchy) Desktop for Raspberry Pi 5
 
 **A lightning-fast, keyboard-first, AI-native Wayland desktop built natively on Arch Linux ARM.**
 
@@ -18,7 +18,7 @@
 
 <p align="center">
   <b>Love Omarchy's modern Linux workflow but only have a Raspberry Pi 5?</b><br>
-  Omarchy Quatro delivers pure bare-metal Omarchy v4 parity on ARM64 silicon — tuned for NVMe SSDs, active cooling, HiDPI monitors, and wearable XR glasses.
+  Omarchy Quattro delivers pure bare-metal Omarchy v4 parity on ARM64 silicon — tuned for NVMe SSDs, active cooling, HiDPI monitors, and wearable XR glasses.
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@
 ### Live Hyprland 0.56.2 Desktop (Chromium + Alacritty `btop`)
 Running with Broadcom V3D hardware acceleration, Tokyo Night unified styling, dynamic tiling, and systemd user services.
 
-![Omarchy Quatro Hyprland Desktop on Pi 5](assets/desktop-hyprland.png)
+![Omarchy Quattro Hyprland Desktop on Pi 5](assets/desktop-hyprland.png)
 
 ### Walker Fuzzy Application Launcher (`Super + D` or `Super + Space`)
 Instant application lookup, symbol search, calculator, clipboard history, and desktop shortcuts.
@@ -52,11 +52,11 @@ Instant application lookup, symbol search, calculator, clipboard history, and de
 
 ---
 
-## 💡 Why Omarchy Quatro?
+## 💡 Why Omarchy Quattro?
 
-Official [Omarchy](https://github.com/omacom/omarchy) ships exclusively for x86_64 PCs. Millions of Raspberry Pi 5 boards sit idle or locked into standard Debian desktop distributions. **Omarchy Quatro** unlocks the full power of the BCM2712 Cortex-A76 cores:
+Official [Omarchy](https://github.com/omacom/omarchy) ships exclusively for x86_64 PCs. Millions of Raspberry Pi 5 boards sit idle or locked into standard Debian desktop distributions. **Omarchy Quattro** unlocks the full power of the BCM2712 Cortex-A76 cores:
 
-| Feature | Raspberry Pi OS | Generic Linux | Omarchy Quatro (Pi 5) |
+| Feature | Raspberry Pi OS | Generic Linux | Omarchy Quattro (Pi 5) |
 | :--- | :--- | :--- | :--- |
 | **Window Manager** | Wayfire / PIXEL | GNOME / KDE | **Hyprland 0.56.2 (Wayland)** with Aquamarine & Quickshell |
 | **Design Language** | Legacy Flat | Mixed | **Unified Tokyo Night** (Shell, Terminal, Editors, Chromium, btop) |
@@ -136,7 +136,7 @@ Omarchy is designed for maximum efficiency without touching the mouse. Press **`
 
 ## 🕶️ Wearable XR & Mobile Dock Support
 
-Omarchy Quatro was built with wearable computing in mind. It works seamlessly with **Viture Pro Mobile Dock** and **Viture Luma Ultra** XR glasses:
+Omarchy Quattro was built with wearable computing in mind. It works seamlessly with **Viture Pro Mobile Dock** and **Viture Luma Ultra** XR glasses:
 
 * **Plug-and-Play HDMI**: Connect the micro-HDMI cable directly into the Viture Mobile Dock. The compositor negotiates 1080p @ 60Hz/120Hz automatically.
 * **Smart Headless Fallback**: If you boot the Pi 5 in your bag without a screen attached, the headless watchdog automatically creates a virtual display so applications never hang. The instant you plug in your glasses, workspaces gracefully migrate to your display!
@@ -197,7 +197,7 @@ enable_uart=1
 
 ## 🔄 Updating Existing Installs
 
-Already running an earlier version of Omarchy Quatro? Bring your system up to full v1.0.6 parity without reflashing:
+Already running an earlier version of Omarchy Quattro? Bring your system up to full v1.0.6 parity without reflashing:
 
 ```bash
 # Download and execute the official in-place update script:
@@ -243,7 +243,9 @@ omarchy-theme-set tokyo-night
 * **Omarchy**: Created by [DHH](https://github.com/dhh) and [37signals / Basecamp](https://github.com/omacom/omarchy).
 * **Arch Linux ARM**: Maintained by the dedicated [ALARM team](https://archlinuxarm.org).
 * **Hyprland**: Created by [Vaxry](https://github.com/vaxerski) and the Hyprland community.
-* **Omarchy Quatro**: Maintained by [NaustudentX18](https://github.com/NaustudentX18/omarchy-pi5-quatro).
+* **Omarchy Quattro**: Maintained by [NaustudentX18](https://github.com/NaustudentX18/omarchy-pi5-quatro).
 
-> ⚠️ **Disclaimer**: Omarchy Quatro is an independent community port and is not officially affiliated with, endorsed by, or supported by 37signals, DHH, or the official Omarchy project.
+> ⚠️ **Disclaimer**: Omarchy Quattro is an independent community port and is not officially affiliated with, endorsed by, or supported by 37signals, DHH, or the official Omarchy project.
+
+<!-- Search tags: omarchy, omarchy-quattro, quattro, raspberry-pi-5, arch-linux-arm, hyprland, quickshell, walker-launcher, aarch64, bcm2712, wayland, linux-desktop, ai-desktop -->
 

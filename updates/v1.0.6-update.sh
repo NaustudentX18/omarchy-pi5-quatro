@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro v1.0.6 in-place update — Full Parity & Usability Release
+# Omarchy Quattro v1.0.6 in-place update — Full Parity & Usability Release
 #
 # Fixes on existing installs:
 #   1. Binary un-shadowing: removes stale 3.8.5 symlinks from /usr/local/bin
@@ -27,7 +27,7 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-echo "[*] Omarchy Quatro v1.0.6 update — full parity & usability release"
+echo "[*] Omarchy Quattro v1.0.6 update — full parity & usability release"
 echo "------------------------------------------------------------------"
 
 # 1. Un-shadow v4.0.2 binaries
@@ -144,4 +144,4 @@ fi
 chmod +x /home/omarchy/.config/walker/config.toml 2>/dev/null || true
 echo "[✓] Update complete! Reloading Hyprland..."
 su -s /bin/bash omarchy -c "export WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1001 HYPRLAND_INSTANCE_SIGNATURE=\$(ls -t /run/user/1001/hypr/ 2>/dev/null | head -1); hyprctl reload >/dev/null 2>&1 || true; pkill -f walker 2>/dev/null || true" 2>/dev/null || true
-echo "[✓] Omarchy Quatro v1.0.6 update successfully applied!"
+echo "[✓] Omarchy Quattro v1.0.6 update successfully applied!"

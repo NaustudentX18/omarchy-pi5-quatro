@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Omarchy Quatro Pi 5 - Desktop & Repository Integrator
+# Omarchy Quattro Pi 5 - Desktop & Repository Integrator
 # Target: Raspberry Pi 5 (Arch Linux ARM)
 # ==============================================================================
 # Clones Omarchy repository (branch 'quattro') into /opt/omarchy, links binaries,
-# seeds Omarchy Quatro dotfiles, themes, and configs into /home/omarchy/.config
+# seeds Omarchy Quattro dotfiles, themes, and configs into /home/omarchy/.config
 # and /etc/skel, configures Pi 5 VideoCore VII GPU env for sway-compatible Wayland compositors,
 # and configures SDDM autologin.
 #
@@ -25,7 +25,7 @@ USERNAME="omarchy"
 USER_HOME="${TARGET_ROOT}/home/${USERNAME}"
 SKEL_DIR="${TARGET_ROOT}/etc/skel"
 
-echo "=== [Omarchy Quatro] Desktop & Repository Provisioning ==="
+echo "=== [Omarchy Quattro] Desktop & Repository Provisioning ==="
 echo "Target root: ${TARGET_ROOT}"
 echo "Omarchy directory: ${OMARCHY_INSTALL_DIR}"
 

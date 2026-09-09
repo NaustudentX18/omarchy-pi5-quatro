@@ -1,6 +1,6 @@
-# Omarchy Quatro Pi 5 Desktop Integration
+# Omarchy Quattro Pi 5 Desktop Integration
 
-This directory contains the provisioning scripts and package manifests for deploying the **Omarchy Quatro** desktop environment on **Raspberry Pi 5** (BCM2712 / VideoCore VII) under **Arch Linux ARM (aarch64)**.
+This directory contains the provisioning scripts and package manifests for deploying the **Omarchy Quattro** desktop environment on **Raspberry Pi 5** (BCM2712 / VideoCore VII) under **Arch Linux ARM (aarch64)**.
 
 ---
 
@@ -15,7 +15,7 @@ This directory contains the provisioning scripts and package manifests for deplo
 
 ---
 
-## 🎨 Omarchy Quatro Desktop Stack
+## 🎨 Omarchy Quattro Desktop Stack
 
 - **Compositor**: Hyprland (Wayland) + Waybar + SDDM (theme: `omarchy`)
 - **GPU Driver**: Broadcom VideoCore VII (`v3d` / `vc4-kms-v3d`) via Mesa and `vulkan-broadcom`
