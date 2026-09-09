@@ -1,33 +1,31 @@
 {
   "os_list": [
     {
-      "name": "Omarchy Quatro - Arch Linux ARM (Pi 5 NVMe)",
-      "description": "Next-generation Arch Linux ARM workstation for Raspberry Pi 5. Features the sway Wayland compositor (Omarchy-styled: waybar, fuzzel, mako), 16k page-size kernel, PCIe Gen 3 NVMe tuning, Argon ONE / NEO 5 active cooling daemon, 8GB ZRAM swap, Chromium + SSH preinstalled, and first-boot auto-expansion.",
-      "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/banner.png",
+      "name": "Omarchy Quatro v1.0.5 - Arch Linux ARM (Pi 5 NVMe)",
+      "description": "Like-for-like Omarchy v4 parity on Raspberry Pi 5. Features Hyprland 0.56.2 on Wayland with Aquamarine & Quickshell, Walker + Elephant launcher, Tokyo Night theme, 16k page-size kernel, PCIe Gen 3 NVMe tuning, Argon active cooling daemon, ZRAM swap, Avahi mDNS, Chromium + Alacritty, and AI CLI tools (omp, claude-code, codex).",
+      "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/omarchy-icon.png",
       "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
-      "extract_size": 12884901888,
-      "extract_sha256": "584b1601e0da3cb6abf6a731e95a04d8e0a3330e84d843dff9ee1f4077eb79ce",
-      "image_download_size": 3262505583,
-      "sha256": "376ad7a93a8e8d2bc775e290bb25d42f03a71ce00aee63a827091a4fe8d24d45",
-      "release_date": "2026-09-08",
+      "extract_size": 25769803776,
+      "image_download_size": 4845984980,
+      "sha256": "4249da236d567df3970805fcce87885ae0feb2bafed9d168e9030b65453470df",
+      "release_date": "2026-09-09",
       "init_format": "systemd",
       "devices": [
         "bcm2712",
         "rpi5-64bit"
       ],
       "architecture": "aarch64",
-      "website": "https://github.com/omacom/omarchy",
+      "website": "https://github.com/NaustudentX18/omarchy-pi5-quatro",
       "subitems": [
         {
-          "name": "Omarchy Quatro v1.0.3 (Zstandard \u2014 audit-hardened, works out of the box)",
-          "description": "Boots straight to a sway desktop with autologin. v1.0.3 bakes in the 2026-09-08 audit pass: verified PARTUUIDs, sway-native SDDM autologin (DisplayServer=wayland), sfdisk first-boot resize, corrected Argon power-button/fan daemon, and upstream Omarchy tooling synced into /opt/omarchy.",
-          "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/banner.png",
+          "name": "Omarchy Quatro v1.0.5 (Zstandard — Hyprland + Omarchy v4 Parity)",
+          "description": "Boots straight to Hyprland 0.56.2 desktop with Walker launcher, Tokyo Night theme, btop, Chromium, and full Omarchy v4 CLI suite.",
+          "icon": "https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quatro/master/assets/omarchy-icon.png",
           "url": "https://github.com/NaustudentX18/omarchy-pi5-quatro/releases/latest/download/omarchy-pi5-quatro.img.zst",
-          "extract_size": 12884901888,
-          "extract_sha256": "584b1601e0da3cb6abf6a731e95a04d8e0a3330e84d843dff9ee1f4077eb79ce",
-          "image_download_size": 3262505583,
-          "sha256": "376ad7a93a8e8d2bc775e290bb25d42f03a71ce00aee63a827091a4fe8d24d45",
-          "release_date": "2026-09-08",
+          "extract_size": 25769803776,
+          "image_download_size": 4845984980,
+          "sha256": "4249da236d567df3970805fcce87885ae0feb2bafed9d168e9030b65453470df",
+          "release_date": "2026-09-09",
           "init_format": "systemd",
           "devices": [
             "bcm2712",
