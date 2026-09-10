@@ -27,6 +27,8 @@
   <a href="#-why-omarchy-quattro">💡 Highlights</a> •
   <a href="#-keybindings-cheat-sheet">⌨️ Keybindings</a> •
   <a href="#-hardware-tuning">⚡ Hardware</a> •
+  <a href="#-updating-existing-installs">🔄 Updates</a> •
+  <a href="#-release-history--active-maintenance">📦 Release History</a> •
   <a href="#-faq--troubleshooting">❓ FAQ</a>
 </p>
 
@@ -203,6 +205,23 @@ Already running an earlier version of Omarchy Quattro? Bring your system up to f
 # Download and execute the official in-place update script:
 curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.7-update.sh | sudo bash
 ```
+
+---
+
+## 📦 Release History & Active Maintenance
+
+Omarchy Quattro is maintained with active release cycles to track upstream DHH/Basecamp releases, security advisories, and silicon-level optimizations for the Raspberry Pi 5.
+
+| Version | Release Date | Upstream Base | Core Features & Parity Additions | In-Place Update Command |
+| :--- | :--- | :--- | :--- | :--- |
+| **[v1.0.7](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.7)** | **2026-09-10** | **Omarchy v4.0.3** | **Security & Agentware Parity Release**:<br>• Full like-for-like parity with upstream 4.0.3 security update<br>• Integrated **OpenClaw** (Control UI webapp & CLI agent)<br>• Integrated **Hermes Desktop & CLI** with auto skill linking<br>• Added **Cursor CLI** & **Muse Code** coding agents<br>• Sleep hook permissions hardening (`root:root 0755`)<br>• Kitty remote control socket isolation & 1Password scale factor fix<br>• Retired legacy icon font; refreshed desktop database & Walker runner | `curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.7-update.sh \| sudo bash` |
+| **[v1.0.6](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.6)** | 2026-09-09 | Omarchy v4.0.2 | **Full Parity & AI Suite Release**:<br>• Binary un-shadowing: unlocked all 446 v4.0.2 commands<br>• Upstream AI apps: ChatGPT Desktop, Perplexity, VS Code, Typora<br>• Flatpak layer enabled (Flathub, Obsidian, Pinta) + Spotify webapp<br>• Tailscale remote GPU Ollama host integration (`100.127.91.97`)<br>• Headless monitor fallback watchdog for displayless boots<br>• Walker terminal runner (`alacritty -e`), Super+D binding | `curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.6-update.sh \| sudo bash` |
+| **[v1.0.5](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.5)** | 2026-09-08 | Omarchy v4.0.0 | **Omarchy v4 Architecture Port**:<br>• Connected to official `[omarchy]` edge aarch64 repository<br>• Integrated canonical `install/omarchy-base.packages`<br>• Expanded base raw image size to 24GB with first-boot resize | `curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.5-update.sh \| sudo bash` |
+| **[v1.0.4](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.4)** | 2026-09-08 | Omarchy v3.8.5 | **In-Place Update Framework**:<br>• Introduced non-destructive upgrade architecture<br>• Added zero-reflash update scripts for live hardware | `curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.4-update.sh \| sudo bash` |
+| **[v1.0.3](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.3)** | 2026-09-08 | Omarchy v3.8.5 | **Compositor & Display Audit**:<br>• Hyprland 0.56.2 + Aquamarine stability hardening<br>• Dynamic HDMI hotplugging and auto-recovery | — |
+| **[v1.0.2](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.2)** | 2026-09-08 | Omarchy v3.8.5 | **VideoCore VII Driver Stabilization**:<br>• Broadcom V3D driver override & SDDM autologin fixes<br>• Sway fallback compositor profile | — |
+| **[v1.0.1](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.1)** | 2026-09-07 | Omarchy v3.8.5 | **Headless Boot & Network Fixes**:<br>• Eliminated boot hang without display connected<br>• Configured Avahi mDNS (`omarchy-pi5.local`) & OpenSSH | — |
+| **[v1.0.0](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases/tag/v1.0.0)** | 2026-09-07 | Base | **Initial Pi 5 Port Foundation**:<br>• Deterministic loop-device image builder (`0x1974beef`)<br>• 16KB kernel pages (`linux-rpi-16k`) & PCIe Gen 3 NVMe tuning<br>• Argon ONE / NEO 5 I²C cooling daemon (`argononed`) | — |
 
 ---
 
