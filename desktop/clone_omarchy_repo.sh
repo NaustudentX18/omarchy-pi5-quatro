@@ -19,7 +19,7 @@ OMARCHY_REPO_URL="${OMARCHY_REPO_URL:-https://github.com/omacom/omarchy.git}"
 OMARCHY_BRANCH="${OMARCHY_BRANCH:-quattro}"
 # Optional: pin to a specific commit for reproducible builds.
 # Leave empty to always pull the latest commit on OMARCHY_BRANCH.
-OMARCHY_PIN_SHA="${OMARCHY_PIN_SHA:-0534987009061cbe2dacdde4ad564092ab698d12}"
+OMARCHY_PIN_SHA="${OMARCHY_PIN_SHA:-8ea51516390320f8e768808b230098e67bdaa82c}"
 OMARCHY_INSTALL_DIR="${TARGET_ROOT}/opt/omarchy"
 USERNAME="omarchy"
 USER_HOME="${TARGET_ROOT}/home/${USERNAME}"
