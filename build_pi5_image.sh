@@ -860,12 +860,54 @@ SPOTIFY_EOF
     chmod +x /home/omarchy/.local/share/applications/Spotify.desktop /etc/skel/.local/share/applications/Spotify.desktop
     chown -R omarchy:omarchy /home/omarchy/.local/share/applications 2>/dev/null || true
 
-    # 5e. Clean up any stale binary shadowing and enforce OMARCHY_PATH
+    # 5e. OpenClaw Control UI WebApp Desktop Entry
+    echo "[+] Installing OpenClaw Control UI webapp..."
+    cat << 'OPENCLAW_EOF' | tee /home/omarchy/.local/share/applications/OpenClaw.desktop > /etc/skel/.local/share/applications/OpenClaw.desktop
+[Desktop Entry]
+Version=1.0
+Name=OpenClaw
+Comment=OpenClaw Agent Platform Control UI
+Exec=omarchy-launch-openclaw
+Terminal=false
+Type=Application
+Icon=openclaw
+StartupNotify=true
+Categories=Development;Utility;
+OPENCLAW_EOF
+    chmod +x /home/omarchy/.local/share/applications/OpenClaw.desktop /etc/skel/.local/share/applications/OpenClaw.desktop 2>/dev/null || true
+
+    # 5f. Upstream 4.0.3 Security & Agentware Hardenings
+    echo "[+] Applying 4.0.3 security and agentware configurations..."
+    if [ -d /usr/lib/systemd/system-sleep ]; then
+        chown -R root:root /usr/lib/systemd/system-sleep
+        chmod 0755 /usr/lib/systemd/system-sleep
+        find /usr/lib/systemd/system-sleep -type f -exec chmod 0755 {} + 2>/dev/null || true
+    fi
+    for kcfg in /home/omarchy/.config/kitty/kitty.conf /etc/skel/.config/kitty/kitty.conf; do
+        if [ -f "$kcfg" ]; then
+            sed -i -E 's/^[[:space:]]*allow_remote_control[[:space:]]+(yes|y|true)/# &/' "$kcfg"
+        fi
+    done
+    if command -v mise &>/dev/null; then
+        su -s /bin/bash omarchy -c "mise settings set upgrade.auto_prune false" 2>/dev/null || true
+        mise settings set upgrade.auto_prune false 2>/dev/null || true
+    fi
+    mkdir -p /home/omarchy/.hermes/skills /etc/skel/.hermes/skills
+    if [ -d /opt/omarchy/default/agents/skills ]; then
+        for sk in /opt/omarchy/default/agents/skills/*; do
+            [ -e "$sk" ] || continue
+            skname=$(basename "$sk")
+            ln -snf "$sk" "/home/omarchy/.hermes/skills/$skname" 2>/dev/null || true
+            ln -snf "$sk" "/etc/skel/.hermes/skills/$skname" 2>/dev/null || true
+        done
+    fi
+
+    # 5g. Clean up any stale binary shadowing and enforce OMARCHY_PATH
     rm -f /etc/omarchy.conf
     find /usr/local/bin -type l -name 'omarchy*' -delete 2>/dev/null || true
 fi
 
-# 5f. Wire Tailscale remote Ollama server into /etc/environment
+# 5h. Wire Tailscale remote Ollama server into /etc/environment
 grep -q "OLLAMA_HOST" /etc/environment 2>/dev/null || echo "OLLAMA_HOST=http://100.127.91.97:11434" >> /etc/environment
 
 # Set default hostname

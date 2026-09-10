@@ -10,7 +10,7 @@
 
 **A lightning-fast, keyboard-first, AI-native Wayland desktop built natively on Arch Linux ARM.**
 
-[![Release](https://img.shields.io/badge/release-v1.0.6-7aa2f7?style=for-the-badge&logo=github)](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases)
+[![Release](https://img.shields.io/badge/release-v1.0.7-7aa2f7?style=for-the-badge&logo=github)](https://github.com/NaustudentX18/omarchy-pi5-quattro/releases)
 [![Target](https://img.shields.io/badge/target-Raspberry%20Pi%205%20(BCM2712)-C51A4A?style=for-the-badge&logo=raspberrypi)](https://www.raspberrypi.com/products/raspberry-pi-5/)
 [![Compositor](https://img.shields.io/badge/compositor-Hyprland%200.56.2-00C8FF?style=for-the-badge)](https://hyprland.org)
 [![Kernel](https://img.shields.io/badge/kernel-16K%20Pages%20(linux--rpi--16k)-1793D1?style=for-the-badge&logo=archlinux)](https://archlinuxarm.org)
@@ -63,7 +63,7 @@ Official [Omarchy](https://github.com/omacom/omarchy) ships exclusively for x86_
 | **Kernel Architecture**| 4KB Pages | 4KB Pages | **16KB Pages (`linux-rpi-16k`)** — 15–20% higher memory throughput |
 | **Storage Speed** | SD Card / PCIe Gen 2 | Stock Gen 2 | **PCIe Gen 3 NVMe (~850–900 MB/s)** out-of-the-box |
 | **Application Launcher**| Start Menu | App Grid | **Walker + Elephant** fuzzy search launcher (`Super + D`) |
-| **AI Integration** | None | Manual install | **`omp`, Claude Code, Codex, Copilot, Cursor Agent, Voxtype, ChatGPT & Perplexity, VS Code** pre-wired |
+| **AI Integration** | None | Manual install | **OpenClaw, Hermes Desktop/CLI, `omp`, Claude Code, Codex, Copilot, Cursor CLI, Muse Code, Voxtype, ChatGPT & Perplexity, VS Code** pre-wired |
 | **App Ecosystem** | Basic repos | Distro default | **Flatpak (Obsidian, Pinta), Spotify WebApp, Signal Desktop, Typora** ready |
 | **Cooling Control** | Kernel default | Manual scripts | **Argon ONE / NEO 5 I²C fan daemon** with smart thermal curves |
 | **Headless Resilience**| Headless display fails| Black screen | **Automatic Headless Display fallback** + auto-HDMI hotplug |
@@ -197,11 +197,11 @@ enable_uart=1
 
 ## 🔄 Updating Existing Installs
 
-Already running an earlier version of Omarchy Quattro? Bring your system up to full v1.0.6 parity without reflashing:
+Already running an earlier version of Omarchy Quattro? Bring your system up to full **v1.0.7** parity (upstream Omarchy v4.0.3 Security & Agentware release) without reflashing:
 
 ```bash
 # Download and execute the official in-place update script:
-curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.6-update.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/NaustudentX18/omarchy-pi5-quattro/master/updates/v1.0.7-update.sh | sudo bash
 ```
 
 ---

@@ -3,6 +3,31 @@
 All notable changes to Omarchy Quattro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
 
+## [1.0.7] — 2026-09-10
+
+### Added — Upstream Omarchy v4.0.3 Security & Agentware Parity Release
+
+- **Upstream v4.0.3 Parity & 450+ Commands**:
+  - Synchronized `/opt/omarchy` baseline to official upstream release tag `v4.0.3` (`omacom/omarchy` `quattro` branch).
+  - Deployed all updated v4.0.3 executables directly to `/usr/bin/` and `/usr/share/omarchy/bin/`.
+- **New Agentware Suite (OpenClaw, Hermes, Cursor CLI, Muse Code)**:
+  - **OpenClaw Integration**: Packaged `openclaw` (2026.9.1-1) with `omarchy-install-ai-openclaw`, `omarchy-launch-openclaw`, and native Control UI webapp desktop launcher (`OpenClaw.desktop`).
+  - **Hermes Desktop & Terminal Agent**: Packaged `hermes-desktop`, `omarchy-install-hermes-cli`, automated Omarchy skill linking (`~/.hermes/skills`), and dynamic Tokyo Night skin sync.
+  - **Cursor CLI**: Configured `cursor-cli` (2026.08.25) with `--trust` and `--yolo` execution pipeline in `omarchy agent`.
+  - **Muse Code**: Integrated `muse` CLI launcher stub via mise (`api.meta.ai/muse-launcher.sh`).
+  - **T3 Code Theme**: Exported Tokyo Night theme tokens for T3 Code editor.
+- **Upstream 4.0.3 Security Hardenings**:
+  - **System Sleep Hooks**: Repaired `/usr/lib/systemd/system-sleep/` entries to strict `root:root` ownership and `0755` permissions, quarantining untrusted scripts.
+  - **Kitty Remote Control Isolation**: Disabled unrestricted `allow_remote_control yes` in Kitty configuration, isolating IPC sockets.
+  - **1Password Scaling Fix**: Added `--force-device-scale-factor=1` to 1Password desktop launcher flags to resolve oversized windows on HiDPI / XR displays.
+  - **Mise Auto-Prune Fix**: Configured `upgrade.auto_prune = false` so active tool versions are never pruned during background updates.
+  - **Icon Font Retirement**: Cleaned up obsolete `~/.local/share/fonts/omarchy.ttf` and regenerated font cache (`fc-cache -f`) so all new agent glyphs render without overlap.
+- **In-Place Non-Destructive Updater (`v1.0.7-update.sh`)**:
+  - Added dedicated one-line updater script enabling live Pi 5 boxes on v1.0.5 or v1.0.6 to upgrade to full v4.0.3 parity without a full reflash.
+  - Hardened Walker launcher and refreshed desktop application databases (`update-desktop-database`) to prevent community-reported 'No matches' launcher bug.
+
+[1.0.7]: https://github.com/NaustudentX18/omarchy-pi5-quattro/compare/v1.0.6...v1.0.7
+
 ## [1.0.6] — 2026-09-09
 
 ### Added — 100% Like-for-Like AI & Desktop Parity Release

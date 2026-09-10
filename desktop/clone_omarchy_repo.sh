@@ -16,10 +16,10 @@ set -euo pipefail
 
 TARGET_ROOT="${1:-/}"
 OMARCHY_REPO_URL="${OMARCHY_REPO_URL:-https://github.com/omacom/omarchy.git}"
-OMARCHY_BRANCH="${OMARCHY_BRANCH:-master}"
+OMARCHY_BRANCH="${OMARCHY_BRANCH:-quattro}"
 # Optional: pin to a specific commit for reproducible builds.
 # Leave empty to always pull the latest commit on OMARCHY_BRANCH.
-OMARCHY_PIN_SHA="${OMARCHY_PIN_SHA:-}"
+OMARCHY_PIN_SHA="${OMARCHY_PIN_SHA:-0534987009061cbe2dacdde4ad564092ab698d12}"
 OMARCHY_INSTALL_DIR="${TARGET_ROOT}/opt/omarchy"
 USERNAME="omarchy"
 USER_HOME="${TARGET_ROOT}/home/${USERNAME}"
@@ -82,21 +82,22 @@ EOF
 chmod 0644 "${TARGET_ROOT}/etc/profile.d/omarchy.sh"
 
 # ------------------------------------------------------------------------------
-# 2. Link Omarchy binaries in /opt/omarchy/bin/ to /usr/local/bin/ (fallback only)
+# 2. Deploy Omarchy binaries in /opt/omarchy/bin/ to /usr/bin/
 # ------------------------------------------------------------------------------
-if [[ ! -x "${TARGET_ROOT}/usr/bin/omarchy" && -d "${OMARCHY_INSTALL_DIR}/bin" ]]; then
-    echo "[+] Linking Omarchy binaries to /usr/local/bin (fallback mode)..."
-    mkdir -p "${TARGET_ROOT}/usr/local/bin"
+if [[ -d "${OMARCHY_INSTALL_DIR}/bin" ]]; then
+    echo "[+] Deploying Omarchy v4.0.3 binaries to /usr/bin/..."
+    mkdir -p "${TARGET_ROOT}/usr/bin" "${TARGET_ROOT}/usr/share/omarchy/bin"
     chmod +x "${OMARCHY_INSTALL_DIR}/bin"/* 2>/dev/null || true
     for bin_path in "${OMARCHY_INSTALL_DIR}/bin"/*; do
         if [[ -f "${bin_path}" && -x "${bin_path}" ]]; then
             bin_name="$(basename "${bin_path}")"
-            ln -sf "/opt/omarchy/bin/${bin_name}" "${TARGET_ROOT}/usr/local/bin/${bin_name}"
+            install -Dm755 "${bin_path}" "${TARGET_ROOT}/usr/bin/${bin_name}"
+            ln -sf "/usr/bin/${bin_name}" "${TARGET_ROOT}/usr/share/omarchy/bin/${bin_name}" 2>/dev/null || true
         fi
     done
-    echo "    Linked $(find "${OMARCHY_INSTALL_DIR}/bin" -mindepth 1 -maxdepth 1 | wc -l) Omarchy binaries."
-else
-    echo "[+] Packaged /usr/bin/omarchy is present — skipping /usr/local/bin symlinks to prevent binary shadowing."
+    # Remove any obsolete symlinks in /usr/local/bin to prevent binary shadowing
+    find "${TARGET_ROOT}/usr/local/bin" -type l -name 'omarchy*' -delete 2>/dev/null || true
+    echo "    Deployed $(find "${OMARCHY_INSTALL_DIR}/bin" -mindepth 1 -maxdepth 1 | wc -l) Omarchy binaries."
 fi
 
 # NOTE: No compositor shim is installed here. Sway ships its own
