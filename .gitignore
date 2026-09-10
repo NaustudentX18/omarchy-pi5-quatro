@@ -2,3 +2,5 @@ work/
 cache/
 output/
 __pycache__/
+logs/
+

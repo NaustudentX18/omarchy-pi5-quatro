@@ -2,13 +2,16 @@ name: Upstream Sync & Drift Monitor
 
 on:
   schedule:
-    - cron: '0 3 * * *' # Run daily at 03:00 UTC
+    - cron: '0 */12 * * *' # Run every 12 hours (00:00 and 12:00 UTC)
   workflow_dispatch:
 
 jobs:
   check-upstream:
     name: Check Omarchy upstream releases & package drift
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
