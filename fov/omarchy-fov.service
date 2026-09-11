@@ -1,0 +1,23 @@
+[Unit]
+Description=Omarchy FOV reserved-margin daemon (Hyprland XR)
+Documentation=https://github.com/NaustudentX18/omarchy-pi5-quattro/tree/master/fov
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/omarchy-fov daemon
+Restart=on-failure
+RestartSec=2
+# Conservative hardening — needs write to ~/.config and $XDG_RUNTIME_DIR
+NoNewPrivileges=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryMax=64M
+PrivateDevices=true
+LimitCORE=0
+OOMPolicy=stop
+
+[Install]
+WantedBy=default.target
