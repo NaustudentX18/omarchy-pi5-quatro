@@ -411,8 +411,13 @@ HOOK_EOF
 chmod 0755 "${TARGET_ROOT}/etc/omarchy/hooks.d/99-pi5-quattro-sync.sh"
 
 # ------------------------------------------------------------------------------
-# 8. Finalize User Permissions
+# 7b. Install omarchy-fov overlay (Hyprland 0.56+ lua eval; issue #2)
 # ------------------------------------------------------------------------------
+if [[ -x "${SCRIPT_DIR}/../fov/install_fov.sh" ]]; then
+    echo "[+] Installing omarchy-fov XR overlay..."
+    bash "${SCRIPT_DIR}/../fov/install_fov.sh" "${TARGET_ROOT}" || true
+fi
+
 echo "[+] Finalizing home directory permissions on ${USER_HOME}..."
 if id -u "${USERNAME}" >/dev/null 2>&1 && [[ -d "${USER_HOME}" ]]; then
     chown -R "${USERNAME}:${USERNAME}" "${USER_HOME}"
