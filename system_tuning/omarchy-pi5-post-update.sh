@@ -98,4 +98,25 @@ done
 # 9. Ensure Argon active cooling fan daemon is active
 systemctl is-active --quiet argononed.service || systemctl enable --now argononed.service 2>/dev/null || true
 
+# 10. Re-assert omarchy-fov overlay (Hyprland 0.56+ lua eval path; issue #2)
+FOV_SRC=""
+for candidate in \
+    /opt/omarchy-pi5-quattro/fov \
+    /usr/local/share/omarchy-pi5-quattro/fov \
+    "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")/../fov"
+do
+    if [ -x "${candidate}/install_fov.sh" ]; then
+        FOV_SRC="${candidate}"
+        break
+    fi
+done
+if [ -n "${FOV_SRC}" ]; then
+    echo "    Re-asserting omarchy-fov overlay from ${FOV_SRC}..."
+    bash "${FOV_SRC}/install_fov.sh" / >/dev/null || bash "${FOV_SRC}/install_fov.sh" || true
+elif [ -x /usr/local/bin/omarchy-fov ]; then
+    echo "    omarchy-fov already present at /usr/local/bin/omarchy-fov"
+else
+    echo "    [INFO] fov/ overlay not found on disk; skip FOV reassert"
+fi
+
 echo "[*] [Omarchy Quattro] Pi 5 post-update reconciliation complete."
