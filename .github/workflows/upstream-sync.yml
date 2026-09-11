@@ -17,16 +17,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch upstream Omarchy (quattro branch) status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Checking Upstream omacom/omarchy ==="
           UPSTREAM_API="https://api.github.com/repos/omacom/omarchy/commits/quattro"
-          UPSTREAM_JSON=$(curl -sSL -H "Accept: application/vnd.github.v3+json" "$UPSTREAM_API")
+          UPSTREAM_JSON=$(curl -sSL -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${GH_TOKEN}" "$UPSTREAM_API")
           UPSTREAM_SHA=$(echo "$UPSTREAM_JSON" | jq -r '.sha // empty')
           UPSTREAM_MSG=$(echo "$UPSTREAM_JSON" | jq -r '.commit.message // empty' | head -n 1)
           UPSTREAM_DATE=$(echo "$UPSTREAM_JSON" | jq -r '.commit.committer.date // empty')
 
           if [ -z "$UPSTREAM_SHA" ]; then
-            echo "Error fetching upstream commit information."
+            echo "Error fetching upstream commit information: $UPSTREAM_JSON"
             exit 1
           fi
 

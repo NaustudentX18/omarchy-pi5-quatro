@@ -22,8 +22,13 @@ cd "${REPO_DIR}"
 UPSTREAM_API="https://api.github.com/repos/omacom/omarchy/releases/latest"
 COMMITS_API="https://api.github.com/repos/omacom/omarchy/commits/quattro"
 
-LATEST_TAG=$(curl -sSL -H "Accept: application/vnd.github.v3+json" "${UPSTREAM_API}" | jq -r '.tag_name // empty')
-UPSTREAM_SHA=$(curl -sSL -H "Accept: application/vnd.github.v3+json" "${COMMITS_API}" | jq -r '.sha // empty')
+AUTH_HEADER=()
+if command -v gh &>/dev/null && gh auth token &>/dev/null; then
+    AUTH_HEADER=(-H "Authorization: Bearer $(gh auth token)")
+fi
+
+LATEST_TAG=$(curl -sSL -H "Accept: application/vnd.github.v3+json" "${AUTH_HEADER[@]}" "${UPSTREAM_API}" | jq -r '.tag_name // empty')
+UPSTREAM_SHA=$(curl -sSL -H "Accept: application/vnd.github.v3+json" "${AUTH_HEADER[@]}" "${COMMITS_API}" | jq -r '.sha // empty')
 
 if [[ -z "${UPSTREAM_SHA}" ]]; then
     log "[!] Failed to query GitHub API for upstream omacom/omarchy."
