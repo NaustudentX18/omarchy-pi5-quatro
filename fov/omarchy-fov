@@ -1,0 +1,273 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# omarchy-fov v2 — XR FOV reserved-margin daemon for Hyprland 0.56+ lua configs
+# Omarchy Quattro Pi 5 (issue #2)
+# ==============================================================================
+# Hyprland 0.56 with hyprland.lua rejects `hyprctl keyword monitor ...,addreserved`.
+# This daemon applies margins via `hyprctl eval` / hl.monitor({ reserved = {...} }).
+# Top is additive with layer-shell (omarchy-bar); we subtract the detected bar height.
+# ==============================================================================
+set -euo pipefail
+
+VERSION_FALLBACK="2.0.0"
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+SYSTEM_CONF="/etc/omarchy-fov.conf"
+USER_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/fov.conf"
+
+# Defaults before config load (overridden by conf files)
+VERSION="${VERSION_FALLBACK}"
+WAYBAR_NAMESPACE="omarchy-bar"
+WAYBAR_BASELINE_FALLBACK=30
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy"
+STATE_FILE="${STATE_DIR}/fov-profile"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/omarchy-fov.lock"
+PROFILE_luma="60 60 96 96"
+PROFILE_compact="80 80 130 130"
+PROFILE_subtle="30 30 50 50"
+PROFILE_full="30 0 0 0"
+PROFILE_CYCLE="full subtle luma compact"
+EVAL_TEMPLATE="hl.monitor({ output = '%OUTPUT%', reserved = { top = %TOP%, right = %RIGHT%, bottom = %BOTTOM%, left = %LEFT% } })"
+
+load_conf() {
+  # shellcheck disable=SC1090
+  [[ -f "${SYSTEM_CONF}" ]] && source "${SYSTEM_CONF}"
+  # shellcheck disable=SC1090
+  [[ -f "${USER_CONF}" ]] && source "${USER_CONF}"
+  mkdir -p "${STATE_DIR}"
+}
+
+die() { echo "${SCRIPT_NAME}: $*" >&2; exit 1; }
+
+usage() {
+  cat <<USAGE
+Usage: ${SCRIPT_NAME} <command>
+
+Commands:
+  full | subtle | luma | compact   Apply named FOV profile
+  toggle                           Cycle to the next profile in PROFILE_CYCLE
+  status                           Show active profile and monitor reserved areas
+  daemon                           Re-apply active profile on Hyprland configreloaded
+  --help | -h                      Show this help
+  --version | -V                   Show version
+
+Config (later wins):
+  ${SYSTEM_CONF}
+  ${USER_CONF}
+USAGE
+}
+
+is_uint() {
+  [[ "${1:-}" =~ ^[0-9]+$ ]] && (( 10#$1 <= 4096 ))
+}
+
+validate_margins() {
+  local t="$1" b="$2" l="$3" r="$4"
+  is_uint "$t" && is_uint "$b" && is_uint "$l" && is_uint "$r" || die "invalid margins: $t $b $l $r (need 0..4096 integers)"
+}
+
+profile_margins() {
+  local name="$1" var="PROFILE_${name}" val
+  val="${!var-}"
+  [[ -n "$val" ]] || die "unknown profile: ${name}"
+  # shellcheck disable=SC2086
+  set -- $val
+  [[ $# -eq 4 ]] || die "profile ${name} must be 'TOP BOTTOM LEFT RIGHT'"
+  validate_margins "$1" "$2" "$3" "$4"
+  printf '%s %s %s %s' "$1" "$2" "$3" "$4"
+}
+
+read_active_profile() {
+  if [[ -f "${STATE_FILE}" ]]; then
+    tr -d '[:space:]' < "${STATE_FILE}"
+  else
+    echo "luma"
+  fi
+}
+
+write_active_profile() {
+  mkdir -p "${STATE_DIR}"
+  printf '%s\n' "$1" > "${STATE_FILE}"
+}
+
+detect_waybar_baseline() {
+  local layers h
+  layers="$(hyprctl layers -j 2>/dev/null || true)"
+  if [[ -n "$layers" ]] && command -v jq >/dev/null 2>&1; then
+    h="$(jq -r --arg ns "${WAYBAR_NAMESPACE}" '
+      [ .. | objects | select((.namespace? // "") == $ns) | (.h // .height // empty) ]
+      | map(tonumber?) | map(select(. != null)) | if length>0 then max else empty end
+    ' <<<"$layers" 2>/dev/null || true)"
+    if [[ -n "${h:-}" ]] && is_uint "$h"; then
+      echo "$h"
+      return 0
+    fi
+  fi
+  # Text fallback when jq missing or JSON shape differs
+  if [[ -n "$layers" ]]; then
+    h="$(printf '%s\n' "$layers" | grep -F "${WAYBAR_NAMESPACE}" -A6 2>/dev/null | grep -Eo '(^|[[:space:]])(h|height)[=:][[:space:]]*[0-9]+' | grep -Eo '[0-9]+' | head -n1 || true)"
+    if [[ -n "${h:-}" ]] && is_uint "$h"; then
+      echo "$h"
+      return 0
+    fi
+  fi
+  echo "${WAYBAR_BASELINE_FALLBACK}"
+}
+
+list_outputs() {
+  local json
+  json="$(hyprctl monitors -j 2>/dev/null || true)"
+  if [[ -n "$json" ]] && command -v jq >/dev/null 2>&1; then
+    jq -r '.[].name' <<<"$json" 2>/dev/null || true
+    return 0
+  fi
+  hyprctl monitors 2>/dev/null | awk '/^Monitor /{print $2}' || true
+}
+
+apply_to_output() {
+  local output="$1" top_lua="$2" right="$3" bottom="$4" left="$5" eval_string
+  eval_string="${EVAL_TEMPLATE}"
+  eval_string="${eval_string//'%OUTPUT%'/${output}}"
+  eval_string="${eval_string//'%TOP%'/${top_lua}}"
+  eval_string="${eval_string//'%RIGHT%'/${right}}"
+  eval_string="${eval_string//'%BOTTOM%'/${bottom}}"
+  eval_string="${eval_string//'%LEFT%'/${left}}"
+
+  local out err
+  if ! out="$(hyprctl eval "${eval_string}" 2>&1)"; then
+    echo "${SCRIPT_NAME}: hyprctl eval failed for ${output}: ${out}" >&2
+    return 1
+  fi
+  if grep -qiE 'error|unknown|can.t|failed' <<<"${out}"; then
+    echo "${SCRIPT_NAME}: hyprctl eval rejected for ${output}: ${out}" >&2
+    return 1
+  fi
+  return 0
+}
+
+apply_profile() {
+  local name="$1" margins t b l r baseline top_lua output ok=0
+  margins="$(profile_margins "${name}")"
+  # shellcheck disable=SC2086
+  set -- $margins
+  t="$1"; b="$2"; l="$3"; r="$4"
+  baseline="$(detect_waybar_baseline)"
+  top_lua=$((t - baseline))
+  (( top_lua < 0 )) && top_lua=0
+
+  local outputs=()
+  mapfile -t outputs < <(list_outputs)
+  if [[ ${#outputs[@]} -eq 0 ]]; then
+    die "no Hyprland monitors found (is Hyprland running?)"
+  fi
+
+  for output in "${outputs[@]}"; do
+    [[ -z "$output" ]] && continue
+    if apply_to_output "$output" "$top_lua" "$r" "$b" "$l"; then
+      ok=1
+    fi
+  done
+
+  (( ok == 1 )) || die "failed to apply profile '${name}' on any monitor"
+  write_active_profile "${name}"
+  echo "Applied mode '${name}' (T:${t} B:${b} L:${l} R:${r}; top_lua=${top_lua} baseline=${baseline})"
+}
+
+toggle_profile() {
+  local current next found=0 p
+  current="$(read_active_profile)"
+  # shellcheck disable=SC2086
+  for p in ${PROFILE_CYCLE}; do
+    if (( found )); then
+      next="$p"
+      break
+    fi
+    [[ "$p" == "$current" ]] && found=1
+  done
+  if [[ -z "${next:-}" ]]; then
+    # shellcheck disable=SC2086
+    set -- ${PROFILE_CYCLE}
+    next="$1"
+  fi
+  apply_profile "${next}"
+}
+
+show_status() {
+  local name margins t b l r baseline conf_note
+  name="$(read_active_profile)"
+  margins="$(profile_margins "${name}")"
+  # shellcheck disable=SC2086
+  set -- $margins
+  t="$1"; b="$2"; l="$3"; r="$4"
+  baseline="$(detect_waybar_baseline)"
+  if [[ -f "${USER_CONF}" ]]; then
+    conf_note="${USER_CONF} (loaded)"
+  elif [[ -f "${SYSTEM_CONF}" ]]; then
+    conf_note="${SYSTEM_CONF} (loaded)"
+  else
+    conf_note="built-in defaults"
+  fi
+
+  cat <<STATUS
+=== Omarchy FOV Status ===
+Active Profile: ${name}
+Reserved Area : Top ${t} px | Bottom ${b} px | Left ${l} px | Right ${r} px
+Top baseline  : ${baseline} px (from ${WAYBAR_NAMESPACE}; fallback ${WAYBAR_BASELINE_FALLBACK})
+Config file   : ${conf_note}
+Version       : ${VERSION}
+
+Active Displays:
+STATUS
+  hyprctl monitors 2>/dev/null || echo "(hyprctl monitors unavailable)"
+}
+
+run_daemon() {
+  local lock_fd name
+  exec {lock_fd}>"${LOCK_FILE}"
+  if ! flock -n "${lock_fd}"; then
+    die "another omarchy-fov daemon holds ${LOCK_FILE}"
+  fi
+
+  # Apply once at start, then on every configreloaded event
+  name="$(read_active_profile)"
+  apply_profile "${name}" || true
+
+  # hyprctl --batch isn't an event stream; use socat on the hypr socket when present
+  local sig_dir event_sock
+  sig_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}"
+  event_sock="${sig_dir}/.socket2.sock"
+  if [[ -S "${event_sock}" ]] && command -v socat >/dev/null 2>&1; then
+    echo "${SCRIPT_NAME}: daemon listening on ${event_sock}"
+    socat -u UNIX-CONNECT:"${event_sock}" - | while IFS= read -r line; do
+      case "$line" in
+        configreloaded*|monitoradded*|monitorremoved*)
+          name="$(read_active_profile)"
+          apply_profile "${name}" || true
+          ;;
+      esac
+    done
+  else
+    echo "${SCRIPT_NAME}: no hypr event socket/socat; polling every 5s" >&2
+    while true; do
+      sleep 5
+      name="$(read_active_profile)"
+      apply_profile "${name}" || true
+    done
+  fi
+}
+
+main() {
+  load_conf
+  local cmd="${1:-}"
+  case "${cmd}" in
+    ""|--help|-h) usage; exit 0 ;;
+    --version|-V) echo "omarchy-fov ${VERSION}"; exit 0 ;;
+    status) show_status ;;
+    toggle) toggle_profile ;;
+    daemon) run_daemon ;;
+    full|subtle|luma|compact) apply_profile "${cmd}" ;;
+    *) die "unknown command: ${cmd} (try --help)" ;;
+  esac
+}
+
+main "$@"
