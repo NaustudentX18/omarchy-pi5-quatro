@@ -10,6 +10,24 @@ set -euo pipefail
 
 echo "[*] [Omarchy Quattro] Running Pi 5 post-update reconciliation..."
 
+# 0. Sync /opt/omarchy from upstream quattro if git repository is present
+if [ -d /opt/omarchy/.git ]; then
+    echo "    Syncing /opt/omarchy from origin/quattro..."
+    git -C /opt/omarchy fetch --depth 1 origin quattro 2>/dev/null || git -C /opt/omarchy fetch origin 2>/dev/null || true
+    git -C /opt/omarchy checkout -B quattro origin/quattro 2>/dev/null || true
+    git -C /opt/omarchy reset --hard origin/quattro 2>/dev/null || true
+    if [ -w /usr/bin ] && [ -d /opt/omarchy/bin ]; then
+        chmod +x /opt/omarchy/bin/* 2>/dev/null || true
+        for bin_path in /opt/omarchy/bin/*; do
+            if [ -f "${bin_path}" ] && [ -x "${bin_path}" ]; then
+                bin_name="$(basename "${bin_path}")"
+                install -Dm755 "${bin_path}" "/usr/bin/${bin_name}" 2>/dev/null || true
+                ln -sf "/usr/bin/${bin_name}" "/usr/share/omarchy/bin/${bin_name}" 2>/dev/null || true
+            fi
+        done
+    fi
+fi
+
 # 1. Re-assert Headless monitor fallback safeguard in /usr/bin/omarchy-hyprland-monitor-watch
 if [ -f /usr/bin/omarchy-hyprland-monitor-watch ] && ! grep -q 'ensure_monitor()' /usr/bin/omarchy-hyprland-monitor-watch; then
     echo "    Re-asserting headless monitor fallback in omarchy-hyprland-monitor-watch..."
@@ -76,5 +94,8 @@ for cfg in /home/omarchy/.config/chromium-flags.conf /etc/skel/.config/chromium-
         sed -i 's|~/.local|/home/omarchy/.local|g' "$cfg" 2>/dev/null || true
     fi
 done
+
+# 9. Ensure Argon active cooling fan daemon is active
+systemctl is-active --quiet argononed.service || systemctl enable --now argononed.service 2>/dev/null || true
 
 echo "[*] [Omarchy Quattro] Pi 5 post-update reconciliation complete."

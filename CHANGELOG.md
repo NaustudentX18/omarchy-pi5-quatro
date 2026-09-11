@@ -3,6 +3,44 @@
 All notable changes to Omarchy Quattro are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versioning is MAJOR.MINOR.
 
+## [2.0.0] — 2026-09-11
+
+### Added — Omarchy Quattro v2.0 Definitive Release Image & AI Agentware Suite
+
+- **Definitive Release Image Architecture**:
+  - Production-ready master raw image (24GB ext4 + fat32 boot) and multi-chunk Zstandard (`zstd -19`) distribution packages (<1.5GB split archives) engineered for GitHub Releases and seamless flashing via Raspberry Pi Imager, Balena Etcher, and raw `dd`.
+  - Tailored kernel pipeline featuring `linux-rpi-16k` (16KB memory pages) coupled with Mesa VideoCore VII KMS hardware acceleration for smooth 60fps+ Wayland compositing.
+  - Out-of-the-box support for Argon ONE / NEO 5 active cooling enclosures via stepped I2C fan daemon (`argononed.service`).
+  - Wearable computing ready: plug-and-play support for VITURE XR / XR Pro AR glasses with 1080p 120Hz display pipeline.
+
+- **Full Upstream Omarchy v4.0.3 Synchronization**:
+  - Synchronized `/opt/omarchy` baseline directly with upstream Omarchy `v4.0.3` (commit `8ea51516390320f8e768808b230098e67bdaa82c` on `quattro` branch).
+  - Un-shadowed and deployed 450+ official v4.0.3 Omarchy executables to `/usr/bin/` and `/usr/share/omarchy/bin/`, eliminating legacy `/usr/local/bin` symlink overrides and obsolete `/etc/omarchy.conf`.
+
+- **Complete AI Agentware & Productivity Suite**:
+  - **OpenClaw Integration**: Packaged `openclaw` (2026.9.1-1) with native CLI (`omarchy-install-ai-openclaw`), background runner (`omarchy-launch-openclaw`), and Control UI desktop entry (`OpenClaw.desktop`) for local agent management.
+  - **Hermes Desktop & CLI**: Packaged `hermes-desktop`, automated skill linking (`$OMARCHY_PATH/default/agents/skills` -> `~/.hermes/skills`), and dynamic Tokyo Night skin synchronization.
+  - **Cursor CLI**: Configured `cursor-cli` (2026.08.25) with `--trust` and `--yolo` execution flow in `omarchy agent`.
+  - **Muse Code**: Integrated `muse` CLI launcher stub via mise wrapper (`api.meta.ai/muse-launcher.sh` / migration `1788724825.sh`).
+  - **Desktop AI Clients**: Integrated `openai-codex-desktop` (ChatGPT/Codex), `perplexity` (Perplexity AI client), `visual-studio-code-bin` (VS Code ARM64), and `typora`.
+  - **Remote Tailscale GPU Acceleration**: Seamless integration with remote NVIDIA RTX 4070 Ti Ollama host (`100.127.91.97:11434`) via `/etc/environment` for instant offloading of 29+ LLMs.
+
+- **Self-Updating Dual-Path Architecture**:
+  - **Native Omarchy Update Hook**: Added `/home/omarchy/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh` and `/etc/pacman.d/hooks/99-omarchy-pi5.hook` to automatically pull `/opt/omarchy` on `omarchy update` and reconcile Pi 5 hardware adaptations.
+  - **Reconciliation Engine (`omarchy-pi5-post-update`)**: Automatically guarantees that upstream package upgrades never overwrite Pi 5 hardware overrides (VideoCore VII GPU parameters, Walker terminal runner, btop visibility, headless monitor fallback watchdog, and Argon cooling daemon).
+  - **Zero-Reflash In-Place Updater (`updates/v2.0.0-update.sh`)**: Executable non-destructive update script allowing live v1.0.x installations to upgrade to full v2.0 status without reinstalling.
+
+- **NVMe PCIe Gen 3 & System Hardenings**:
+  - **APST Stability Guard**: Configured `nvme_core.default_ps_max_latency=0` in `cmdline.txt` to eliminate Autonomous Power State Transition latency spikes and dropouts on PCIe Gen 3 NVMe SSDs under sustained loads.
+  - **Dynamic ZRAM Scaling**: Dynamic zram swap configuration scaled automatically across 4GB, 8GB, and 16GB Pi 5 boards (`min(ram/2, 8192)`).
+  - **Privileged Sleep Hook Permissions**: Enforced strict `root:root` 0755 permissions across `/usr/lib/systemd/system-sleep/` to quarantine unsafe scripts and conform to migration `1788662350.sh`.
+  - **Kitty Socket Isolation**: Disabled unrestricted `allow_remote_control yes` in Kitty terminal configurations, restricting IPC control strictly to local sockets.
+  - **1Password Display Scaling**: Enforced `--force-device-scale-factor=1` across desktop launchers to prevent window scaling distortion on HiDPI and XR virtual displays.
+  - **Mise Auto-Prune Safeguard**: Set `upgrade.auto_prune = false` to prevent active runtime versions and tool dependencies from accidental deletion during updates.
+  - **Icon Font Retirement**: Cleaned up deprecated `~/.local/share/fonts/omarchy.ttf` and regenerated font cache to resolve glyph collisions.
+
+[2.0.0]: https://github.com/NaustudentX18/omarchy-pi5-quattro/compare/v1.0.7...v2.0.0
+
 ## [1.0.7] — 2026-09-10
 
 ### Added — Upstream Omarchy v4.0.3 Security & Agentware Parity Release

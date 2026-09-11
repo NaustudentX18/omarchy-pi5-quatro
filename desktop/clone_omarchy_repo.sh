@@ -18,8 +18,8 @@ TARGET_ROOT="${1:-/}"
 OMARCHY_REPO_URL="${OMARCHY_REPO_URL:-https://github.com/omacom/omarchy.git}"
 OMARCHY_BRANCH="${OMARCHY_BRANCH:-quattro}"
 # Optional: pin to a specific commit for reproducible builds.
-# Leave empty to always pull the latest commit on OMARCHY_BRANCH.
-OMARCHY_PIN_SHA="${OMARCHY_PIN_SHA:-8ea51516390320f8e768808b230098e67bdaa82c}"
+# Leave empty to dynamically track the latest commit on OMARCHY_BRANCH.
+OMARCHY_PIN_SHA="${OMARCHY_PIN_SHA-8ea51516390320f8e768808b230098e67bdaa82c}"
 OMARCHY_INSTALL_DIR="${TARGET_ROOT}/opt/omarchy"
 USERNAME="omarchy"
 USER_HOME="${TARGET_ROOT}/home/${USERNAME}"
@@ -46,10 +46,20 @@ else
     git clone --depth 1 --branch "${OMARCHY_BRANCH}" "${OMARCHY_REPO_URL}" "${OMARCHY_INSTALL_DIR}"
 fi
 
-# Optional SHA pinning for reproducible builds
+# Optional SHA pinning for reproducible builds with dynamic fallback
 if [[ -n "${OMARCHY_PIN_SHA}" ]]; then
     echo "    Pinning Omarchy checkout to SHA ${OMARCHY_PIN_SHA}..."
-    git -C "${OMARCHY_INSTALL_DIR}" checkout "${OMARCHY_PIN_SHA}"
+    if ! git -C "${OMARCHY_INSTALL_DIR}" checkout "${OMARCHY_PIN_SHA}" 2>/dev/null; then
+        echo "    Fetching SHA ${OMARCHY_PIN_SHA} from origin..."
+        git -C "${OMARCHY_INSTALL_DIR}" fetch --depth 1 origin "${OMARCHY_PIN_SHA}" 2>/dev/null || true
+        if ! git -C "${OMARCHY_INSTALL_DIR}" checkout "${OMARCHY_PIN_SHA}" 2>/dev/null; then
+            echo "    [!] Pinned SHA checkout failed; falling back to origin/${OMARCHY_BRANCH} HEAD..."
+            git -C "${OMARCHY_INSTALL_DIR}" checkout -B "${OMARCHY_BRANCH}" "origin/${OMARCHY_BRANCH}" 2>/dev/null || git -C "${OMARCHY_INSTALL_DIR}" checkout "${OMARCHY_BRANCH}"
+        fi
+    fi
+else
+    echo "    OMARCHY_PIN_SHA is empty: dynamically tracking origin/${OMARCHY_BRANCH} HEAD..."
+    git -C "${OMARCHY_INSTALL_DIR}" checkout -B "${OMARCHY_BRANCH}" "origin/${OMARCHY_BRANCH}" 2>/dev/null || git -C "${OMARCHY_INSTALL_DIR}" checkout "${OMARCHY_BRANCH}"
 fi
 RESOLVED_SHA="$(git -C "${OMARCHY_INSTALL_DIR}" rev-parse HEAD 2>/dev/null || echo unknown)"
 echo "    Resolved Omarchy commit: ${RESOLVED_SHA}"
@@ -336,7 +346,72 @@ if [[ -f "${TARGET_ROOT}/etc/pam.d/sddm" ]]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 7. Finalize User Permissions
+# 7. Native Omarchy Update Hook & Pi 5 Post-Update Reconciliation
+# ------------------------------------------------------------------------------
+echo "[+] Configuring native Omarchy update hook..."
+mkdir -p "${TARGET_ROOT}/usr/local/bin"
+mkdir -p "${USER_HOME}/.config/omarchy/hooks/post-update.d"
+mkdir -p "${SKEL_DIR}/.config/omarchy/hooks/post-update.d"
+mkdir -p "${TARGET_ROOT}/root/.config/omarchy/hooks/post-update.d"
+mkdir -p "${TARGET_ROOT}/etc/omarchy/hooks.d"
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "${SCRIPT_DIR}/../system_tuning/omarchy-pi5-post-update.sh" ]]; then
+    cp -a "${SCRIPT_DIR}/../system_tuning/omarchy-pi5-post-update.sh" "${TARGET_ROOT}/usr/local/bin/omarchy-pi5-post-update"
+    chmod 0755 "${TARGET_ROOT}/usr/local/bin/omarchy-pi5-post-update"
+fi
+if [[ -f "${SCRIPT_DIR}/../system_tuning/99-omarchy-pi5.hook" ]]; then
+    mkdir -p "${TARGET_ROOT}/etc/pacman.d/hooks"
+    cp -a "${SCRIPT_DIR}/../system_tuning/99-omarchy-pi5.hook" "${TARGET_ROOT}/etc/pacman.d/hooks/99-omarchy-pi5.hook"
+fi
+
+cat << 'GUARD_EOF' > "${USER_HOME}/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh"
+#!/usr/bin/env bash
+# ==============================================================================
+# Omarchy Quattro - Native omarchy update hook for Pi 5
+# ==============================================================================
+# Triggered by 'omarchy update' (omarchy-hook post-update).
+# Pulls latest /opt/omarchy and reconciles Pi 5 hardware adaptations.
+# ==============================================================================
+set -euo pipefail
+
+if [[ -d /opt/omarchy/.git ]]; then
+    echo "[*] [Omarchy Quattro] Updating /opt/omarchy repository..."
+    git -C /opt/omarchy fetch --depth 1 origin quattro 2>/dev/null || git -C /opt/omarchy fetch origin 2>/dev/null || true
+    git -C /opt/omarchy checkout -B quattro origin/quattro 2>/dev/null || true
+    git -C /opt/omarchy reset --hard origin/quattro 2>/dev/null || true
+    if [[ -w /usr/bin && -d /opt/omarchy/bin ]]; then
+        chmod +x /opt/omarchy/bin/* 2>/dev/null || true
+        for bin_path in /opt/omarchy/bin/*; do
+            if [[ -f "${bin_path}" && -x "${bin_path}" ]]; then
+                bin_name="$(basename "${bin_path}")"
+                install -Dm755 "${bin_path}" "/usr/bin/${bin_name}" 2>/dev/null || true
+                ln -sf "/usr/bin/${bin_name}" "/usr/share/omarchy/bin/${bin_name}" 2>/dev/null || true
+            fi
+        done
+    fi
+fi
+
+if [[ -x /usr/local/bin/omarchy-pi5-post-update ]]; then
+    /usr/local/bin/omarchy-pi5-post-update
+fi
+GUARD_EOF
+
+chmod 0755 "${USER_HOME}/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh"
+cp -a "${USER_HOME}/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh" "${SKEL_DIR}/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh"
+cp -a "${USER_HOME}/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh" "${TARGET_ROOT}/root/.config/omarchy/hooks/post-update.d/10-pi5-guard.sh"
+
+cat << 'HOOK_EOF' > "${TARGET_ROOT}/etc/omarchy/hooks.d/99-pi5-quattro-sync.sh"
+#!/usr/bin/env bash
+# Ensures Pi 5 specific overlays, kernel packages, and GPU configs persist across omarchy update
+if [[ -x /usr/local/bin/omarchy-pi5-post-update ]]; then
+    /usr/local/bin/omarchy-pi5-post-update
+fi
+HOOK_EOF
+chmod 0755 "${TARGET_ROOT}/etc/omarchy/hooks.d/99-pi5-quattro-sync.sh"
+
+# ------------------------------------------------------------------------------
+# 8. Finalize User Permissions
 # ------------------------------------------------------------------------------
 echo "[+] Finalizing home directory permissions on ${USER_HOME}..."
 if id -u "${USERNAME}" >/dev/null 2>&1 && [[ -d "${USER_HOME}" ]]; then
